@@ -6,13 +6,13 @@ Small, zero-runtime-dependency browser automation detector with explainable evid
 
 ## Install
 
-The source and built distributions are available on GitHub. Until an npm registry release is published:
+Install from npm:
 
 ```sh
-npm install github:omegdadi/session-driver#v0.1.0
+npm install @omegdadi/session-driver
 ```
 
-The installed package name is `@omegdadi/session-driver`.
+The source and built distributions are also available on GitHub (`npm install github:omegdadi/session-driver#v0.1.0`).
 
 ```js
 import { detectSession } from '@omegdadi/session-driver';
@@ -146,6 +146,6 @@ npm ci --prefix tests/fixtures/expo
 npm run test:expo               # actual Expo/Metro export and browser rendering
 ```
 
-See [TESTING.md](TESTING.md) for measured results and scope. Automated tests verify behavior and known limitations; they do not measure real-world human/agent classification accuracy. OS-level control, stealth automation, remote debugging without an exposed flag, and vendor agent modes without a bridge may remain `unknown`. WebKit under Playwright is not a substitute for every Safari release.
+See [TESTING.md](https://github.com/omegdadi/session-driver/blob/main/TESTING.md) for measured results and scope. Automated tests verify behavior and known limitations; they do not measure real-world human/agent classification accuracy. OS-level control, stealth automation, remote debugging without an exposed flag, and vendor agent modes without a bridge may remain `unknown`. WebKit under Playwright is not a substitute for every Safari release.
 
 Built distributions are committed so GitHub installs require no build toolchain. Run `npm run build` after source edits. CI checks for distribution drift. For an npm registry release, a maintainer with access to the `@omegdadi` npm scope can run `npm publish --access public` after all checks pass. GitHub ownership does not grant npm scope ownership.
