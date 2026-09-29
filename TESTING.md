@@ -28,3 +28,7 @@ These tests establish API/package compatibility and behavior for controlled scen
 Native Expo iOS/Android devices were not launched: they have no browser session to classify. Native-like no-document environments are unit-tested to return `unsupported`. Expo Web and Electron were actually built/launched; Vue, Svelte, Angular, and Next.js full applications were not separately built. They can consume the same standard JS exports, with SSR-safe imports tested.
 
 No vendor-specific Atlas/Comet/Gemini active-agent API or toolbar DOM access is claimed. Browser-owned UI is not observable through a normal page's DOM. In-page UI matching is configurable weak evidence. WebMCP detection checks capability only, not native agent invocation. Electron debugger attachment is not a universal remote-debugger enumeration API.
+
+## Public demo verification
+
+The interactive demo adds 21 browser checks (7 scenarios on each of Chromium, Firefox, and WebKit): real-library verdicts and refresh, scroll checkpoint rearming, all lab presets and isolation from live state, unknown fallback, live declarations with visible caveats, bounded JSON history export, and responsive/keyboard controls at 375px and 320px widths. Tests assert no uncaught page errors. The Pages workflow gates deployment on this suite.

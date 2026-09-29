@@ -50,7 +50,9 @@
     "test:package": "node scripts/test-package.mjs",
     "check": "npm test && npm run test:browser && npm run test:package",
     "prepack": "npm run build",
-    "test:expo": "npm run build --prefix tests/fixtures/expo && node scripts/test-expo.mjs"
+    "test:expo": "npm run build --prefix tests/fixtures/expo && node scripts/test-expo.mjs",
+    "build:site": "node scripts/build-site.mjs",
+    "test:site": "playwright test --config playwright.site.config.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

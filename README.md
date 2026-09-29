@@ -1,5 +1,7 @@
 # session-driver
 
+**[Try the live demo →](https://omegdadi.github.io/session-driver/)** · [Demo deployment](https://github.com/omegdadi/session-driver/actions/workflows/pages.yml)
+
 Small, zero-runtime-dependency browser automation detector with explainable evidence. TypeScript, ESM, CommonJS, and a standalone browser script. MIT licensed.
 
 **A web page cannot reliably prove “human versus AI.”** This package detects exposed automation, reads cooperative declarations, and reports uncertainty. It cannot infer an LLM reasoning loop from clicks. Use it for diagnostics and adapting experiences, never authentication, fraud decisions, or blocking accessibility tools.
@@ -149,3 +151,20 @@ npm run test:expo               # actual Expo/Metro export and browser rendering
 See [TESTING.md](https://github.com/omegdadi/session-driver/blob/main/TESTING.md) for measured results and scope. Automated tests verify behavior and known limitations; they do not measure real-world human/agent classification accuracy. OS-level control, stealth automation, remote debugging without an exposed flag, and vendor agent modes without a bridge may remain `unknown`. WebKit under Playwright is not a substitute for every Safari release.
 
 Built distributions are committed so GitHub installs require no build toolchain. Run `npm run build` after source edits. CI checks for distribution drift. For an npm registry release, a maintainer with access to the `@omegdadi` npm scope can run `npm publish --access public` after all checks pass. GitHub ownership does not grant npm scope ownership.
+
+## Interactive demo
+
+[Open the public GitHub Pages demo](https://omegdadi.github.io/session-driver/) to inspect your browser, scroll to reverify, see the evidence, and export recent checks. The technique lab runs this exact library on clearly labeled simulated inputs without changing your live verdict. Human and agent labels require explicit declarations; ordinary browsers and concealed automation can both return unknown.
+
+The demo source lives in `site/`. The Pages workflow tests all three browser engines before deploying changes from `main`. No third-party scripts, analytics, cookies, or persistent browser storage are used by the demo. All detection and measurements run locally; GitHub Pages serves the static assets.
+
+```sh
+npm ci
+npm run build:site
+npm run test:site
+# Or preview manually:
+node scripts/serve-site.mjs
+# http://127.0.0.1:4178/session-driver/
+```
+
+To test a deployed copy: `DEMO_URL=https://omegdadi.github.io/session-driver/ npm run test:site`. The tests use fresh isolated browsers, including explicit declaration and hidden-flag cases.

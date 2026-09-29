@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Session Driver — Human or agent?</title>
+<meta name="description" content="An open-source experiment in browser automation detection. Inspect your session, scroll to reverify, and test the evidence.">
+<meta name="theme-color" content="#f5f5ed">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header class="nav wrap"><a class="brand" href="#top" aria-label="Session Driver home"><span class="brandmark">s/</span> session driver<span class="version">v0.1</span></a><a class="source" href="https://github.com/omegdadi/session-driver" target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a></header>
+<main>
+<section class="hero wrap" id="top" aria-labelledby="hero-title">
+<div class="eyebrow"><span class="dot"></span> LIVE BROWSER EXPERIMENT <span class="local">Everything runs on your device</span></div>
+<h1 id="hero-title">Who's at the controls?</h1>
+<p class="intro">A human. An agent. Or something we can't tell yet.<br>Let's look at what your browser actually reveals.</p>
+<div class="verdict-stage" data-state="unknown" id="verdict-stage">
+<div class="verdict-caption"><span>YOUR CURRENT SESSION</span><span id="basis">Checking browser signals</span></div>
+<div class="verdict" id="verdict" role="status" aria-live="polite">CHECKING</div>
+<div class="verdict-bottom"><p id="explanation">Reading this page's automation signals…</p><div class="scan-mark" aria-hidden="true"><span></span><i></i></div></div>
+</div>
+<div class="hero-actions"><button class="primary" id="reverify">Reverify session <span aria-hidden="true">↻</span></button><span id="last-check">Waiting for first check</span><a class="scroll-link" href="#checkpoint">Scroll down to reverify <span aria-hidden="true">↓</span></a></div>
+<noscript><p class="notice">Enable JavaScript to run this browser experiment. No detection has taken place.</p></noscript>
+<div class="metrics" aria-label="Session measurements"><div><span id="check-count">0</span><small>VERIFICATION RUNS</small></div><div><span id="trusted-count">0</span><small>TRUSTED INPUT EVENTS</small></div><div><span id="synthetic-count">0</span><small>SYNTHETIC INPUT EVENTS</small></div><div><span id="scroll-count">0</span><small>SCROLL CHECKPOINTS</small></div></div>
+<p class="footnote">Trusted events can come from automation, too. These counters measure activity, not humanity.</p>
+</section>
+<section class="evidence-section"><div class="wrap">
+<div class="section-heading"><div><div class="eyebrow">01 / THE EVIDENCE</div><h2>Show your working.</h2></div><p>No mystery score. No fingerprinting.<br>Just the signals, and what they mean.</p></div>
+<div class="signals" id="signals"></div>
+<details class="raw"><summary>Inspect the live detector result <span aria-hidden="true">+</span></summary><pre id="raw-result"></pre></details>
+</div></section>
+<section class="checkpoint wrap" id="checkpoint" aria-labelledby="checkpoint-title">
+<div class="checkpoint-icon" aria-hidden="true">↻</div><div><div class="eyebrow">02 / A SECOND LOOK</div><h2 id="checkpoint-title">New scroll. Fresh check.</h2><p>Reaching this checkpoint reruns detection. Scroll back above it and return to check again.</p><p id="checkpoint-status" role="status">Scroll this panel into view to reverify.</p></div><button id="checkpoint-button" class="secondary">Check again ↻</button>
+</section>
+<section class="lab-section"><div class="wrap">
+<div class="section-heading"><div><div class="eyebrow">03 / THE TECHNIQUE LAB</div><h2>Change the evidence.<br>See what holds up.</h2></div><p>These are simulated inputs to the real library.<br>Your live result above stays untouched.</p></div>
+<div class="lab">
+<div class="lab-controls"><label class="field-label" for="scenario">START WITH A SCENARIO</label><select id="scenario"><option value="ordinary">Ordinary browser · no exposed signals</option><option value="webdriver">WebDriver-controlled browser</option><option value="agent">Cooperative agent</option><option value="human">Self-declared human</option><option value="hidden">Agent with hidden automation</option><option value="debugger">Human with a debugger</option><option value="overlay">In-page agent indicator</option><option value="conflict">Human declaration + WebDriver</option></select>
+<div class="toggles">
+<label><span>WebDriver flag<small>Standard browser automation signal</small></span><input id="lab-webdriver" type="checkbox" role="switch"></label>
+<label><span>Headless user agent<small>Weak, spoofable evidence</small></span><input id="lab-headless" type="checkbox" role="switch"></label>
+<label><span>Debugger attached<small>Provided by a host integration</small></span><input id="lab-debugger" type="checkbox" role="switch"></label>
+<label><span>Agent UI indicator<small>Matching element inside the page</small></span><input id="lab-overlay" type="checkbox" role="switch"></label>
+<label><span>WebMCP available<small>Capability, not active agent control</small></span><input id="lab-webmcp" type="checkbox" role="switch"></label>
+<label><span>Host reports active agent<small>Cooperative host declaration</small></span><input id="lab-host" type="checkbox" role="switch"></label>
+</div><label class="field-label" for="lab-declaration">PAGE DECLARATION</label><select id="lab-declaration"><option value="">None</option><option value="human">Human (self-declared)</option><option value="agent">Agent (self-declared)</option></select></div>
+<div class="lab-output"><span class="pill">SIMULATION · NOT YOUR LIVE SESSION</span><h3 id="lab-verdict" aria-live="polite">UNKNOWN</h3><p id="lab-explanation"></p><div class="lab-rule" id="scenario-note"></div><pre id="lab-result"></pre></div>
+</div>
+</div></section>
+<section class="history-section wrap"><div class="section-heading"><div><div class="eyebrow">04 / YOUR SESSION NOTEBOOK</div><h2>A little history. No tracking.</h2></div><button class="secondary" id="download">Download results ↓</button></div>
+<p class="history-description">The last 12 live checks, kept in memory until you leave this page. The download includes these checks and aggregate event counts.</p>
+<div class="history-scroll"><table><thead><tr><th>CHECK</th><th>TRIGGER</th><th>RESULT</th><th>EVIDENCE</th><th>LOCAL TIME</th></tr></thead><tbody id="history"></tbody></table></div>
+<div class="honesty"><span aria-hidden="true">ⓘ</span><p><strong>Honest about the unknown.</strong> A browser can reveal automation without revealing who is behind it. Hidden automation can look exactly like an ordinary browser. “Human” and “Agent” appear only with explicit declarations; “Automated” means the browser exposes control. This is a diagnostic experiment, not a CAPTCHA or identity check. Browser-owned toolbars and sidebars are outside the page's view.</p></div>
+</section>
+</main>
+<footer class="wrap"><a class="brand" href="#top"><span class="brandmark">s/</span> session driver</a><p>Open source. Zero runtime dependencies. MIT licensed.</p><a href="https://github.com/omegdadi/session-driver#readme">Use it in your project ↗</a></footer>
+<script type="module" src="./app.js"></script>
+</body></html>

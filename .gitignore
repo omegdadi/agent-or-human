@@ -6,3 +6,5 @@ playwright-report/
 
 .expo/
 tests/fixtures/expo/dist/
+
+_site/
