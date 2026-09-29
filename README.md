@@ -6,13 +6,13 @@ Small, zero-runtime-dependency browser automation detector with explainable evid
 
 ## Install
 
-Install from npm:
+Install the published GitHub release with npm (no build tools required):
 
 ```sh
-npm install @omegdadi/session-driver
+npm install https://github.com/omegdadi/session-driver/releases/download/v0.1.0/omegdadi-session-driver-0.1.0.tgz
 ```
 
-The source and built distributions are also available on GitHub (`npm install github:omegdadi/session-driver#v0.1.0`).
+The installed package name is `@omegdadi/session-driver`. Source is tagged `v0.1.0`. npm registry publication is pending: the initial publish was rejected by the registry, so a bare-name registry install is not yet available.
 
 ```js
 import { detectSession } from '@omegdadi/session-driver';
