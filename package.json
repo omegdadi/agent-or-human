@@ -1,0 +1,67 @@
+{
+  "name": "@omegdadi/session-driver",
+  "version": "0.1.0",
+  "description": "Explainable browser automation signals and cooperative session-driver declarations. Zero runtime dependencies.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./browser": "./dist/session-driver.global.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omegdadi/session-driver.git"
+  },
+  "bugs": "https://github.com/omegdadi/session-driver/issues",
+  "homepage": "https://github.com/omegdadi/session-driver#readme",
+  "keywords": [
+    "automation",
+    "agent",
+    "browser",
+    "webdriver",
+    "electron",
+    "expo",
+    "react"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "npm run build && node --test tests/unit.test.mjs && tsc -p tests/tsconfig.json",
+    "test:browser": "playwright test",
+    "test:electron": "node tests/electron.mjs",
+    "test:package": "node scripts/test-package.mjs",
+    "check": "npm test && npm run test:browser && npm run test:package",
+    "prepack": "npm run build",
+    "test:expo": "npm run build --prefix tests/fixtures/expo && node scripts/test-expo.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/react": "19.2.14",
+    "electron": "44.4.5",
+    "esbuild": "0.28.2",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "typescript": "5.9.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

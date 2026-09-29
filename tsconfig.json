@@ -1,0 +1,1 @@
+{"compilerOptions":{"target":"ES2020","module":"NodeNext","moduleResolution":"NodeNext","strict":true,"declaration":true,"emitDeclarationOnly":true,"outDir":"dist","lib":["ES2020","DOM"],"skipLibCheck":true},"include":["src/**/*.ts"]}
