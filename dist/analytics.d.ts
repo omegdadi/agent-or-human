@@ -1,0 +1,53 @@
+import { type DetectOptions, type Detection } from './index.js';
+export declare const DETECTOR_VERSION = "0.2.0";
+export type Segment = 'likely_human' | 'likely_automated' | 'declared_agent' | 'unclassified';
+/** Evidence quality, not a calibrated probability of identity. */
+export type SegmentConfidence = 'insufficient' | 'heuristic' | 'strong_signal' | 'declared';
+export interface SegmentAssessment {
+    segment: Segment;
+    confidence: SegmentConfidence;
+    basis: 'none' | 'behavior' | 'browser_signal' | 'declaration';
+    reasons: string[];
+    detectorVersion: string;
+    assessedAt: number;
+    changedAt: number;
+    revision: number;
+    environment: 'browser' | 'unsupported';
+    detection: Detection;
+    behavior: {
+        trustedEvents: number;
+        syntheticEvents: number;
+        modalities: string[];
+        activeSpanMs: number;
+        variedCadence: boolean;
+    };
+}
+export interface ClassifierOptions extends DetectOptions {
+    /** Optional clock for deterministic testing; defaults to Date.now. */
+    now?: () => number;
+}
+export interface SessionClassifier {
+    /** Last assessment, isolated from consumer mutation. */
+    getSnapshot(): SegmentAssessment;
+    /** Recheck flags, declarations, and the rolling behavior window. */
+    refresh(): SegmentAssessment;
+    /** Emits only when segment, confidence, or basis changes. No automatic initial event. */
+    subscribe(listener: (assessment: SegmentAssessment) => void): () => void;
+    /** Freeze the last assessment and remove listeners. Idempotent. */
+    stop(): void;
+}
+/** Opt-in, local-only analytics heuristic. No storage, network, IDs, or experiment allocation. */
+export declare function createSessionClassifier(options?: ClassifierOptions): SessionClassifier;
+/** Flattened event properties for your existing analytics client. Sends nothing. */
+export declare function toAnalyticsProperties(assessment: SegmentAssessment): {
+    session_driver_segment: Segment;
+    session_driver_confidence: SegmentConfidence;
+    session_driver_basis: "declaration" | "none" | "behavior" | "browser_signal";
+    session_driver_reasons: string[];
+    session_driver_signals: ("declared-agent" | "declared-human" | "webdriver" | "headless-user-agent" | "unreadable-property" | "declaration-conflict" | "debugger-attached" | "agent-ui-indicator" | "invalid-selector" | "host-agent-active" | "webmcp-available")[];
+    session_driver_version: string;
+    session_driver_assessed_at: number;
+    session_driver_changed_at: number;
+    session_driver_revision: number;
+    session_driver_environment: "unsupported" | "browser";
+};

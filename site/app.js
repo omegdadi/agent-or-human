@@ -1,7 +1,32 @@
-import { detectSession, observeSession } from './lib/index.js';
+import { detectSession, observeSession, createSessionClassifier, toAnalyticsProperties, DETECTOR_VERSION } from './lib/index.js';
 const $ = id => document.getElementById(id);
 const observer = observeSession();
 const history = [];
+const classifier = createSessionClassifier();
+const transitions = [];
+const experimentEvents = [];
+let exposure = null;
+const describeSegment = assessment => ({
+  unclassified: ['UNCLASSIFIED', 'Insufficient evidence', 'Browse naturally: click or tap, scroll, or use your keyboard. Varied activity over several seconds can support a likely-human assessment. Passive visits remain unclassified.'],
+  likely_human: ['LIKELY HUMAN', 'Behavioral heuristic · not verified identity', 'Your recent interaction pattern is compatible with human browsing. This is an unvalidated heuristic; an agent imitating that pattern can receive the same segment.'],
+  likely_automated: ['LIKELY AUTOMATED', assessment.confidence === 'strong_signal' ? 'Strong browser signal · not agent identity' : 'Behavioral heuristic · not verified identity', 'Automation evidence is present. This may be an AI agent, a test runner, or another automated system. See the supporting reasons below.'],
+  declared_agent: ['DECLARED AGENT', 'Explicit declaration · not verified identity', 'The page or host explicitly identifies an agent. This remains cooperative metadata, separate from inferred automation.'],
+}[assessment.segment]);
+function renderAssessment(assessment) {
+  const [word, basis, explanation] = describeSegment(assessment);
+  $('verdict').textContent = word; $('basis').textContent = basis; $('explanation').textContent = explanation;
+  $('verdict-stage').dataset.state = assessment.segment;
+  $('raw-result').textContent = JSON.stringify(assessment, null, 2);
+  $('analytics-result').textContent = JSON.stringify(toAnalyticsProperties(assessment), null, 2);
+  $('behavior-progress').textContent = `${assessment.behavior.trustedEvents} accepted trusted interactions · ${(assessment.behavior.activeSpanMs / 1000).toFixed(1)}s of activity · ${assessment.behavior.modalities.length} input types · ${assessment.behavior.variedCadence ? 'varied timing' : 'more timing variation needed'}`;
+  $('segment-reasons').textContent = `Evidence: ${assessment.reasons.join(', ')} · Confidence: ${assessment.confidence} · Detector: ${assessment.detectorVersion}`;
+  renderSignals(assessment.detection);
+}
+classifier.subscribe(assessment => {
+  transitions.unshift(toAnalyticsProperties(assessment)); transitions.length = Math.min(transitions.length, 32);
+  renderAssessment(assessment);
+});
+for (const type of ['pointerdown', 'keydown', 'wheel']) window.addEventListener(type, () => requestAnimationFrame(() => renderAssessment(classifier.getSnapshot())), { passive: true });
 let checks = 0;
 let checkpoints = 0;
 const describe = result => ({
@@ -39,22 +64,20 @@ function renderSignals(result) {
   }));
 }
 function verify(trigger) {
-  const result = detectSession();
-  const [word, basis, explanation] = describe(result);
+  const result = classifier.refresh();
+  const [word, basis] = describeSegment(result);
   const now = new Date();
   checks++;
   if (trigger === 'Scroll checkpoint') checkpoints++;
-  $('verdict').textContent = word; $('basis').textContent = basis; $('explanation').textContent = explanation;
-  $('verdict-stage').dataset.state = result.verdict;
+  renderAssessment(result);
   $('last-check').textContent = `Checked at ${now.toLocaleTimeString()}`;
   $('check-count').textContent = checks; $('scroll-count').textContent = checkpoints;
-  $('raw-result').textContent = JSON.stringify(result, null, 2);
-  renderSignals(result); renderCounts();
+  renderCounts();
   history.unshift({ check: checks, trigger, timestamp: now.toISOString(), ...result, interactions: observer.getSnapshot().interactions });
   history.length = Math.min(history.length, 12);
   $('history').replaceChildren(...history.map(entry => {
     const row = document.createElement('tr');
-    const values = [`${String(entry.check).padStart(2, '0')}`, entry.trigger, entry.verdict.toUpperCase(), entry.signals.map(s => s.code).join(', ') || 'No exposed signals', new Date(entry.timestamp).toLocaleTimeString()];
+    const values = [`${String(entry.check).padStart(2, '0')}`, entry.trigger, entry.segment.toUpperCase().replaceAll('_', ' '), entry.reasons.join(', '), new Date(entry.timestamp).toLocaleTimeString()];
     for (const value of values) { const cell = document.createElement('td'); cell.textContent = value; row.append(cell); }
     return row;
   }));
@@ -113,12 +136,29 @@ for (const id of [...flags.map(flag => `lab-${flag}`), 'lab-declaration']) $(id)
   renderLab();
 });
 $('download').addEventListener('click', () => {
-  const data = { library: '@omegdadi/session-driver', version: '0.1.0', exportedAt: new Date().toISOString(), checks, scrollCheckpoints: checkpoints, interactions: observer.getSnapshot().interactions, history };
+  const data = { library: '@omegdadi/session-driver', version: DETECTOR_VERSION, exportedAt: new Date().toISOString(), checks, scrollCheckpoints: checkpoints, interactions: observer.getSnapshot().interactions, history, segmentTransitions: transitions, experimentEvents };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
   const link = document.createElement('a'); link.href = url; link.download = 'session-driver-results.json'; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
-window.addEventListener('pageshow', event => { if (event.persisted) verify('Page restored'); });
+function renderExperiment() { $('experiment-result').textContent = experimentEvents.length ? JSON.stringify(experimentEvents, null, 2) : 'No example events recorded. Nothing is sent to a server.'; }
+$('record-exposure').addEventListener('click', () => {
+  if (exposure) return;
+  exposure = { variant: $('example-variant').value, properties: toAnalyticsProperties(classifier.refresh()) };
+  experimentEvents.push({ event: 'example_exposure', variant: exposure.variant, ...exposure.properties });
+  $('example-variant').disabled = true; $('record-exposure').disabled = true; $('record-conversion').disabled = false;
+  renderExperiment();
+});
+$('record-conversion').addEventListener('click', () => {
+  if (!exposure) return;
+  experimentEvents.push({ event: 'example_conversion', variant: exposure.variant, segment_at_exposure: exposure.properties.session_driver_segment, ...toAnalyticsProperties(classifier.refresh()) });
+  if (experimentEvents.length > 12) experimentEvents.splice(1, 1);
+  renderExperiment();
+});
+$('reset-experiment').addEventListener('click', () => { exposure = null; experimentEvents.length = 0; $('example-variant').disabled = false; $('record-exposure').disabled = false; $('record-conversion').disabled = true; renderExperiment(); });
+window.addEventListener('pageshow' , event => { if (event.persisted) verify('Page restored'); });
 verify('Page loaded');
+transitions.push(toAnalyticsProperties(classifier.getSnapshot()));
+renderExperiment();
 $('scenario-note').textContent = scenarios.ordinary.note;
 renderLab();

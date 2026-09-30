@@ -8,21 +8,22 @@
 <link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<header class="nav wrap"><a class="brand" href="#top" aria-label="Session Driver home"><span class="brandmark">s/</span> session driver<span class="version">v0.1</span></a><a class="source" href="https://github.com/omegdadi/session-driver" target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a></header>
+<header class="nav wrap"><a class="brand" href="#top" aria-label="Session Driver home"><span class="brandmark">s/</span> session driver<span class="version">v0.2</span></a><a class="source" href="https://github.com/omegdadi/session-driver" target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a></header>
 <main>
 <section class="hero wrap" id="top" aria-labelledby="hero-title">
-<div class="eyebrow"><span class="dot"></span> LIVE BROWSER EXPERIMENT <span class="local">Everything runs on your device</span></div>
+<div class="eyebrow"><span class="dot"></span> LIVE ANALYTICS SEGMENT <span class="local">Everything runs on your device</span></div>
 <h1 id="hero-title">Who's at the controls?</h1>
-<p class="intro">A human. An agent. Or something we can't tell yet.<br>Let's look at what your browser actually reveals.</p>
+<p class="intro">Understand your human and automated traffic.<br>Evidence-based segments for metrics and experiments.</p>
 <div class="verdict-stage" data-state="unknown" id="verdict-stage">
 <div class="verdict-caption"><span>YOUR CURRENT SESSION</span><span id="basis">Checking browser signals</span></div>
 <div class="verdict" id="verdict" role="status" aria-live="polite">CHECKING</div>
 <div class="verdict-bottom"><p id="explanation">Reading this page's automation signals…</p><div class="scan-mark" aria-hidden="true"><span></span><i></i></div></div>
 </div>
 <div class="hero-actions"><button class="primary" id="reverify">Reverify session <span aria-hidden="true">↻</span></button><span id="last-check">Waiting for first check</span><a class="scroll-link" href="#checkpoint">Scroll down to reverify <span aria-hidden="true">↓</span></a></div>
+<div class="behavior-panel"><strong>How the assessment develops</strong><p>Use the page naturally. Several clicks/taps and scrolls over time can support “likely human.” Keyboard-only and touch-only activity can also qualify with more evidence.</p><p id="behavior-progress" role="status"></p><p id="segment-reasons"></p></div>
 <noscript><p class="notice">Enable JavaScript to run this browser experiment. No detection has taken place.</p></noscript>
 <div class="metrics" aria-label="Session measurements"><div><span id="check-count">0</span><small>VERIFICATION RUNS</small></div><div><span id="trusted-count">0</span><small>TRUSTED INPUT EVENTS</small></div><div><span id="synthetic-count">0</span><small>SYNTHETIC INPUT EVENTS</small></div><div><span id="scroll-count">0</span><small>SCROLL CHECKPOINTS</small></div></div>
-<p class="footnote">Trusted events can come from automation, too. These counters measure activity, not humanity.</p>
+<p class="footnote">Trusted events can come from automation, too. The classifier uses a bounded 30-second activity window; these totals count raw input. Confidence describes evidence quality, not a probability.</p>
 </section>
 <section class="evidence-section"><div class="wrap">
 <div class="section-heading"><div><div class="eyebrow">01 / THE EVIDENCE</div><h2>Show your working.</h2></div><p>No mystery score. No fingerprinting.<br>Just the signals, and what they mean.</p></div>
@@ -47,10 +48,16 @@
 <div class="lab-output"><span class="pill">SIMULATION · NOT YOUR LIVE SESSION</span><h3 id="lab-verdict" aria-live="polite">UNKNOWN</h3><p id="lab-explanation"></p><div class="lab-rule" id="scenario-note"></div><pre id="lab-result"></pre></div>
 </div>
 </div></section>
-<section class="history-section wrap"><div class="section-heading"><div><div class="eyebrow">04 / YOUR SESSION NOTEBOOK</div><h2>A little history. No tracking.</h2></div><button class="secondary" id="download">Download results ↓</button></div>
+<section class="analytics-section wrap"><div class="section-heading"><div><div class="eyebrow">04 / ANALYTICS &amp; A/B TESTS</div><h2>Attach evidence. Keep the variant.</h2></div><p>Event properties for your own analytics client.<br>This demo sends nothing to a server.</p></div>
+<details class="raw" open><summary>Current analytics properties</summary><pre id="analytics-result"></pre></details>
+<div class="behavior-panel"><strong>Try an exposure and conversion</strong><p>Choose a sample variant, then record an exposure. Later conversions keep that variant and preserve the exposure segment alongside the current segment. This is a local example, not a randomization service.</p>
+<label for="example-variant">Sample variant </label><select id="example-variant"><option>A</option><option>B</option></select>
+<div class="example-actions"><button class="secondary" id="record-exposure">Record exposure</button><button class="secondary" id="record-conversion" disabled>Record conversion</button><button class="secondary" id="reset-experiment">Reset example</button></div><pre id="experiment-result"></pre></div>
+<p class="footnote">Behavior can be affected by the treatment itself. Use changing segments for exploratory analysis; keep the overall randomized result and exposure-time segment for comparison.</p></section>
+<section class="history-section wrap"><div class="section-heading"><div><div class="eyebrow">05 / YOUR SESSION NOTEBOOK</div><h2>A little history. No tracking.</h2></div><button class="secondary" id="download">Download results ↓</button></div>
 <p class="history-description">The last 12 live checks, kept in memory until you leave this page. The download includes these checks and aggregate event counts.</p>
 <div class="history-scroll"><table><thead><tr><th>CHECK</th><th>TRIGGER</th><th>RESULT</th><th>EVIDENCE</th><th>LOCAL TIME</th></tr></thead><tbody id="history"></tbody></table></div>
-<div class="honesty"><span aria-hidden="true">ⓘ</span><p><strong>Honest about the unknown.</strong> A browser can reveal automation without revealing who is behind it. Hidden automation can look exactly like an ordinary browser. “Human” and “Agent” appear only with explicit declarations; “Automated” means the browser exposes control. This is a diagnostic experiment, not a CAPTCHA or identity check. Browser-owned toolbars and sidebars are outside the page's view.</p></div>
+<div class="honesty"><span aria-hidden="true">ⓘ</span><p><strong>Useful segments, honest limits.</strong> Likely human and behavioral automation labels are unvalidated heuristics, not verified identities or accuracy scores. Passive visitors stay unclassified. Agents can imitate human input, and people can produce automation-like patterns. Validate against labeled traffic before excluding segments from metrics. A declared agent is self-reported. Keep A/B assignment stable, preserve the segment at exposure, and report the unclassified share.</p></div>
 </section>
 </main>
 <footer class="wrap"><a class="brand" href="#top"><span class="brandmark">s/</span> session driver</a><p>Open source. Zero runtime dependencies. MIT licensed.</p><a href="https://github.com/omegdadi/session-driver#readme">Use it in your project ↗</a></footer>

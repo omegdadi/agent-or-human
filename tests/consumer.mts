@@ -5,3 +5,8 @@ observer.subscribe(value => { const count: number = value.interactions.trusted; 
 declareSessionDriver('agent');
 // @ts-expect-error incorrect declaration
  declareSessionDriver('robot');
+
+import {createSessionClassifier, toAnalyticsProperties} from '@omegdadi/session-driver';
+const classifier = createSessionClassifier();
+const properties = toAnalyticsProperties(classifier.refresh());
+classifier.stop();

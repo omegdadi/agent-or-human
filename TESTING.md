@@ -32,3 +32,7 @@ No vendor-specific Atlas/Comet/Gemini active-agent API or toolbar DOM access is 
 ## Public demo verification
 
 The interactive demo adds 21 browser checks (7 scenarios on each of Chromium, Firefox, and WebKit): real-library verdicts and refresh, scroll checkpoint rearming, all lab presets and isolation from live state, unknown fallback, live declarations with visible caveats, bounded JSON history export, and responsive/keyboard controls at 375px and 320px widths. Tests assert no uncaught page errors. The Pages workflow gates deployment on this suite.
+
+## v0.2 analytics verification
+
+Adds 11 deterministic classifier tests for passive traffic, varied input, keyboard-only use, held-key repeats, regular/synthetic input, headless corroboration, signal precedence, declarations, transition notifications, evidence expiry, snapshot isolation, bounded sampling, cleanup, SSR, and serializable analytics properties. The public demo suite adds a real trusted-input journey in each browser engine, demonstrating development of a likely-human segment and stable exposure/conversion variant. This journey deliberately hides automation flags, so it also establishes a known false-negative limitation: a suitably behaving agent can look human. These are functional tests, not a human/agent accuracy benchmark.

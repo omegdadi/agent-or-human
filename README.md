@@ -11,10 +11,10 @@ Small, zero-runtime-dependency browser automation detector with explainable evid
 Install the published GitHub release with npm (no build tools required):
 
 ```sh
-npm install https://github.com/omegdadi/session-driver/releases/download/v0.1.0/omegdadi-session-driver-0.1.0.tgz
+npm install https://github.com/omegdadi/session-driver/releases/download/v0.2.0/omegdadi-session-driver-0.2.0.tgz
 ```
 
-The installed package name is `@omegdadi/session-driver`. Source is tagged `v0.1.0`. npm registry publication is pending: the initial publish was rejected by the registry, so a bare-name registry install is not yet available.
+The installed package name is `@omegdadi/session-driver`. Source is tagged `v0.2.0`. npm registry publication is pending: the initial publish was rejected by the registry, so a bare-name registry install is not yet available.
 
 ```js
 import { detectSession } from '@omegdadi/session-driver';
@@ -24,6 +24,26 @@ console.log(session.verdict, session.signals);
 // { verdict: 'automated', basis: 'signal', automated: true,
 //   agentic: null, signals: [{ code: 'webdriver', strength: 'strong' }] }
 ```
+
+## Analytics and A/B segments (v0.2)
+
+```js
+import { createSessionClassifier, toAnalyticsProperties } from '@omegdadi/session-driver';
+const classifier = createSessionClassifier();
+const initial = toAnalyticsProperties(classifier.getSnapshot());
+classifier.subscribe(assessment => {
+  // Attach these properties using your existing analytics client.
+  console.log(toAnalyticsProperties(assessment));
+});
+// At an exposure/conversion: classifier.refresh()
+// At teardown: classifier.stop()
+```
+
+Segments are `likely_human`, `likely_automated`, `declared_agent`, and `unclassified`. Ordinary browsing can become likely human as varied interactions accumulate. Passive visitors remain unclassified. Confidence labels describe evidence quality, not measured probabilities. Rules are **experimental and not calibrated against a labeled traffic dataset**; agents can imitate human input.
+
+Keep A/B assignment stable, retain the segment at exposure, and attach the current segment to later events. Post-treatment behavioral segments can bias causal comparisons; use them as exploratory slices alongside overall randomized results. Read [ANALYTICS.md](https://github.com/omegdadi/session-driver/blob/main/ANALYTICS.md) for integration, exact rules, privacy, and validation guidance. The package transmits nothing and never assigns variants.
+
+`detectSession()` and `observeSession()` below retain their original evidence-only behavior for backward compatibility.
 
 ## Results
 
@@ -154,7 +174,7 @@ Built distributions are committed so GitHub installs require no build toolchain.
 
 ## Interactive demo
 
-[Open the public GitHub Pages demo](https://omegdadi.github.io/session-driver/) to inspect your browser, scroll to reverify, see the evidence, and export recent checks. The technique lab runs this exact library on clearly labeled simulated inputs without changing your live verdict. Human and agent labels require explicit declarations; ordinary browsers and concealed automation can both return unknown.
+[Open the public GitHub Pages demo](https://omegdadi.github.io/session-driver/) to inspect your browser, scroll to reverify, see the evidence, and export recent checks. The technique lab runs this exact library on clearly labeled simulated inputs without changing your live verdict. The live view now shows analytics segments and evidence progress; the technique lab still illustrates the original evidence-only detector. Ordinary browsing can become likely human; passive or inconclusive visits remain unclassified.
 
 The demo source lives in `site/`. The Pages workflow tests all three browser engines before deploying changes from `main`. No third-party scripts, analytics, cookies, or persistent browser storage are used by the demo. All detection and measurements run locally; GitHub Pages serves the static assets.
 

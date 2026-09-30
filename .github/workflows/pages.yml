@@ -2,7 +2,7 @@ name: Demo · GitHub Pages
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'dist/**', 'scripts/build-site.mjs', 'scripts/serve-site.mjs', 'tests/site.spec.mjs', 'playwright.site.config.mjs', '.github/workflows/pages.yml', 'package.json', 'package-lock.json']
+    paths: ['src/**', 'site/**', 'dist/**', 'scripts/build-site.mjs', 'scripts/serve-site.mjs', 'tests/site.spec.mjs', 'playwright.site.config.mjs', '.github/workflows/pages.yml', 'package.json', 'package-lock.json']
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,6 +19,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm test
+      - run: git diff --exit-code -- dist
       - run: npm run build:site
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run test:site
