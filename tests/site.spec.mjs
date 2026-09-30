@@ -68,6 +68,8 @@ test('notebook is bounded and exports genuine checks as JSON', async ({ page }) 
   expect(result.library).toBe('@omegdadi/session-driver');
   expect(result.history[0].segment).toBe((await page.locator('#verdict').textContent()).toLowerCase().replaceAll(' ', '_'));
   expect(result.version).toBe('0.4.0');
+  expect(result.currentAssessment.pointer.mode).toBe('classify');
+  expect(result.validationContext.source).toBe('self-reported-not-used-by-classifier');
   expect(result.segmentTransitions.length).toBeGreaterThan(0);
 });
 test('mobile fits screen and switches work with keyboard', async ({ page }) => {

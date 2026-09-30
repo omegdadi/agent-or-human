@@ -139,7 +139,7 @@ for (const id of [...flags.map(flag => `lab-${flag}`), 'lab-declaration']) $(id)
   renderLab();
 });
 $('download').addEventListener('click', () => {
-  const data = { library: '@omegdadi/session-driver', version: DETECTOR_VERSION, exportedAt: new Date().toISOString(), checks, scrollCheckpoints: checkpoints, interactions: observer.getSnapshot().interactions, history, segmentTransitions: transitions, experimentEvents, validationContext: { driver: $('validation-driver').value, inputMethod: $('validation-input').value, source: 'self-reported-not-used-by-classifier' } };
+  const data = { library: '@omegdadi/session-driver', version: DETECTOR_VERSION, exportedAt: new Date().toISOString(), currentAssessment: classifier.refresh(), checks, scrollCheckpoints: checkpoints, interactions: observer.getSnapshot().interactions, history, segmentTransitions: transitions, experimentEvents, validationContext: { driver: $('validation-driver').value, inputMethod: $('validation-input').value, source: 'self-reported-not-used-by-classifier' } };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
   const link = document.createElement('a'); link.href = url; link.download = 'session-driver-results.json'; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
