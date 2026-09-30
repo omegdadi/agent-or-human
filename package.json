@@ -1,6 +1,6 @@
 {
   "name": "@omegdadi/session-driver",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Explainable browser automation signals and cooperative session-driver declarations. Zero runtime dependencies.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -24,7 +24,8 @@
     "dist",
     "README.md",
     "LICENSE",
-    "ANALYTICS.md"
+    "ANALYTICS.md",
+    "RESEARCH.md"
   ],
   "sideEffects": false,
   "license": "MIT",
@@ -45,7 +46,7 @@
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "npm run build && node --test tests/unit.test.mjs tests/analytics.test.mjs && tsc -p tests/tsconfig.json",
+    "test": "npm run build && node --test tests/unit.test.mjs tests/analytics.test.mjs tests/pointer.test.mjs && tsc -p tests/tsconfig.json",
     "test:browser": "playwright test",
     "test:electron": "node tests/electron.mjs",
     "test:package": "node scripts/test-package.mjs",

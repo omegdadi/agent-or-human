@@ -11,10 +11,10 @@ Small, zero-runtime-dependency browser automation detector with explainable evid
 Install the published GitHub release with npm (no build tools required):
 
 ```sh
-npm install https://github.com/omegdadi/session-driver/releases/download/v0.3.0/omegdadi-session-driver-0.3.0.tgz
+npm install https://github.com/omegdadi/session-driver/releases/download/v0.4.0/omegdadi-session-driver-0.4.0.tgz
 ```
 
-The installed package name is `@omegdadi/session-driver`. Source is tagged `v0.3.0`. npm registry publication is pending: the initial publish was rejected by the registry, so a bare-name registry install is not yet available.
+The installed package name is `@omegdadi/session-driver`. Source is tagged `v0.4.0`. npm registry publication is pending: the initial publish was rejected by the registry, so a bare-name registry install is not yet available.
 
 ```js
 import { detectSession } from '@omegdadi/session-driver';
@@ -192,3 +192,9 @@ To test a deployed copy: `DEMO_URL=https://omegdadi.github.io/session-driver/ np
 ### Browser agents that hide WebDriver
 
 v0.3 adds `classifier.wrapWebMCPTool(execute)` to measure actual execution of your site's WebMCP tools. The [live demo](https://omegdadi.github.io/session-driver/) exposes `reverify_session`; ask a WebMCP-capable browser agent to invoke it and the page reports **AGENT TOOL USED**. Registration alone does not classify anyone. See [integration and limits](./ANALYTICS.md#measuring-actual-webmcp-tool-use-v03). Agents using only normal clicks can remain unclassified; this is not universal passive detection.
+
+### Experimental mouse/input fusion (v0.4)
+
+`createSessionClassifier({ pointerAnalysis: 'observe' })` adds local pointer diagnostics; use `'classify'` to opt into experimental multi-feature inference. The demo enables this mode and includes a pointer sandbox plus optional labeled-result export. It combines repeated sparse/straight paths with click timing or exact-center targeting; speed alone does not classify a visitor. The real Codex in-app browser was detected from ordinary clicks with no WebMCP invocation or agent declaration. This is a measured example, not validated accuracy on human traffic.
+
+Read [standards research, proposed browser contracts, thresholds, and evaluation plan](./RESEARCH.md) before using this mode for metrics. Raw coordinates are processed transiently and never exported. Default library behavior remains unchanged unless you opt in.

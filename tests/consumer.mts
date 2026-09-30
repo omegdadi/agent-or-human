@@ -10,3 +10,7 @@ import {createSessionClassifier, toAnalyticsProperties} from '@omegdadi/session-
 const classifier = createSessionClassifier();
 const properties = toAnalyticsProperties(classifier.refresh());
 classifier.stop();
+
+const pointerClassifier = createSessionClassifier({ pointerAnalysis: 'observe' });
+const speed: number | null = pointerClassifier.refresh().pointer.maxSpeedPxPerMs;
+pointerClassifier.stop();

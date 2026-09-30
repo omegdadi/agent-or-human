@@ -1,4 +1,4 @@
-# Analytics segmentation (experimental, v0.3.0)
+# Analytics segmentation (experimental, v0.4.0)
 
 `createSessionClassifier()` is an opt-in heuristic for understanding website traffic. It adds behavior-based segments to the existing evidence-only `detectSession()` API. It is not an identity check, fraud gate, CAPTCHA, or validated human/agent classifier.
 
@@ -42,7 +42,7 @@ For a two-way dashboard, retain `likely_human` as one group and combine `likely_
 
 ## Current rules (not empirically calibrated)
 
-Only `pointerdown`, `keydown`, and `wheel` events are observed. Pointer input includes touch on Pointer Events browsers. Held-key repeats are ignored. Events less than 150 ms after the last accepted event are coalesced. Click and pointerdown are not both counted for the same gesture. At most 32 samples from the last 30 seconds remain in memory.
+With pointer analysis off (the default), only `pointerdown`, `keydown`, and `wheel` events are observed. Pointer input includes touch on Pointer Events browsers. Held-key repeats are ignored. Events less than 150 ms after the last accepted event are coalesced. Click and pointerdown are not both counted for the same gesture. At most 32 samples from the last 30 seconds remain in memory.
 
 - **Likely human:** at least 90% accepted samples are trusted; their inter-event gaps have coefficient of variation >= 0.25 and a range >= 150 ms. Require 6 trusted events spanning at least 3 seconds across 2 input types, OR 10 trusted events spanning at least 6 seconds in one input type. This permits keyboard-only/touch-only input without requiring a mouse. Time spent idle cannot satisfy the activity span.
 - **Behavioral likely automated:** a HeadlessChrome user agent plus at least 12 synthetic events over 3 seconds, >=90% synthetic input, with gap coefficient of variation <0.1. Synthetic events alone do not suffice: legitimate applications generate them.
@@ -79,11 +79,11 @@ Behavior may itself change because of the tested treatment. Slicing results by a
 
 ## Event properties and subscriptions
 
-`toAnalyticsProperties()` returns segment, confidence, basis, reason codes, signal codes, detector version, assessment timestamp, change timestamp, revision, and browser/unsupported environment. It copies arrays so consumers cannot mutate the classifier. It includes no user ID, session ID, URL, typed content, pointer coordinates, or variant.
+`toAnalyticsProperties()` returns segment, confidence, basis, reason codes, signal codes, detector version, assessment timestamp, change timestamp, revision, and browser/unsupported environment. It copies arrays so consumers cannot mutate the classifier. It additionally includes pointer mode and pointer reason codes (raw coordinates are never exported). It includes no user ID, session ID, URL, typed content, pointer coordinates, or variant.
 
 Subscribe callbacks fire only when segment, confidence, or basis changes. They do not fire initially or on every event. Read/send the initial snapshot explicitly. Assessment timestamps update on refresh; `changedAt`/`revision` advance only on those transitions. Listener exceptions are isolated so one failing analytics callback cannot break others; your client should handle its own reporting errors.
 
-Behavior samples retain only event family, trust flag, and timing in bounded memory. Exported behavior summaries contain aggregate counts, modality names, activity span, and timing-variety status. The package sets no cookies, reads no storage, creates no IDs, sends no network requests, and stores no raw keys, positions, targets, or text. Timestamps in exported analytics properties are Unix milliseconds.
+Behavior samples retain only event family, trust flag, and timing in bounded memory. Exported behavior summaries contain aggregate counts, modality names, activity span, and timing-variety status. The package sets no cookies, reads no storage, creates no IDs, sends no network requests, and stores no raw keys or text. With pointer analysis off it stores no positions or targets. Opt-in pointer analysis temporarily buffers bounded coordinates and reads target geometry; it never exports raw paths or retains DOM targets. Timestamps in exported analytics properties are Unix milliseconds.
 
 ## Validate before trusting the segments
 
@@ -121,3 +121,16 @@ For 30 seconds after invocation, refresh yields `likely_automated`, `heuristic`,
 The demo registers `reverify_session`, a genuine local verification action. Its “AGENT TOOL USED” label is a presentation of this recent-use signal; analytics retain `likely_automated`. An agent using only screenshots/clicks can still remain unclassified or appear likely human. This does not solve universal passive agent detection.
 
 API reference: [WebMCP proposal](https://github.com/webmachinelearning/webmcp/blob/main/README.md). Feature-detect this evolving browser API; no polyfill or browser fingerprint is required by this package.
+
+## Experimental pointer fusion (v0.4)
+
+```js
+const observer = createSessionClassifier({ pointerAnalysis: 'observe' });
+// Inspect observer.refresh().pointer; classification remains unchanged.
+// After evaluating your own labeled traffic, opt into the experimental rule:
+const experimental = createSessionClassifier({ pointerAnalysis: 'classify' });
+```
+
+Default is off. The demo enables classify mode and visibly labels it experimental. Pointer rules combine repeated spatial patterns with repeated execution patterns; neither speed nor missing movement alone decides. `assessment.pointer` contains bounded aggregates and reason codes. `toAnalyticsProperties()` adds pointer mode/reasons so experiments can distinguish configurations. No new identity probability is produced. See [RESEARCH.md](./RESEARCH.md) for exact thresholds, standards sources, privacy changes, exclusions, observed native-browser results, and validation requirements.
+
+This option temporarily processes coordinates and target geometry in local memory. It exports aggregates, not raw paths or DOM targets. Call `stop()` at teardown. A human using assistive tools or remote control can look automated; a human-like agent can avoid these rules. Do not use an uncalibrated experimental segment as the sole basis for excluding production conversions.

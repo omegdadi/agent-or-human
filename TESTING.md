@@ -43,3 +43,10 @@ Adds 11 deterministic classifier tests for passive traffic, varied input, keyboa
 - 27 demo tests pass across Chromium, Firefox, and WebKit. The new regression test mocks registration and invokes the captured callback; it is not a claim of native WebMCP support in all engines.
 - Separately tested native WebMCP in Codex's in-app browser: `webdriver` false, normal Chrome/154 user agent, `document.modelContext` present. Initial load remained unclassified. The browser's WebMCP capability discovered `reverify_session`; invoking it changed the actual page to AGENT TOOL USED with `likely_automated`, `heuristic`, and `webmcp-tool-invoked`. No page declaration was injected.
 - This confirms instrumented tool-channel measurement. It does not demonstrate passive detection of screenshot/click-only agent control or verified caller identity.
+
+## v0.4 experimental pointer fusion
+
+- 36 unit tests plus ESM/CJS TypeScript consumers: multiple-signal rule, observation-only mode, counterexamples, touch/pen/secondary/untrusted exclusion, coalesced samples, timer rounding, bounded memory, expiry, lifecycle and focus handling.
+- 33 site tests across Chromium, Firefox, and WebKit, including ordinary mouse clicks with webdriver hidden and no WebMCP invocation. Optional validation labels are not detector input.
+- Native Codex IAB verification: ordinary alternating target clicks produced 6 gestures, 5 sparse transitions, 6 short presses, and 6 exact-center hits; classification changed to likely_automated with behavioral reasons. WebDriver was not exposed and no declaration/tool-use signal was supplied. Speed was not measurable in that example.
+- This is implementation verification and a single-controller demonstration, not a labeled human/agent accuracy benchmark. See RESEARCH.md for validation design and unimplemented contract proposals.

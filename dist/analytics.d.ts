@@ -1,5 +1,7 @@
+import { type PointerEvidence } from './pointer.js';
+export type { PointerEvidence } from './pointer.js';
 import { type DetectOptions, type Detection } from './index.js';
-export declare const DETECTOR_VERSION = "0.3.0";
+export declare const DETECTOR_VERSION = "0.4.0";
 export type Segment = 'likely_human' | 'likely_automated' | 'declared_agent' | 'unclassified';
 /** Evidence quality, not a calibrated probability of identity. */
 export type SegmentConfidence = 'insufficient' | 'heuristic' | 'strong_signal' | 'declared';
@@ -14,6 +16,7 @@ export interface SegmentAssessment {
     revision: number;
     environment: 'browser' | 'unsupported';
     detection: Detection;
+    pointer: PointerEvidence;
     behavior: {
         trustedEvents: number;
         syntheticEvents: number;
@@ -23,6 +26,8 @@ export interface SegmentAssessment {
     };
 }
 export interface ClassifierOptions extends DetectOptions {
+    /** Opt-in experimental mouse analysis. Observe exposes aggregates; classify enables uncalibrated fusion. Default off. */
+    pointerAnalysis?: 'observe' | 'classify';
     /** Optional clock for deterministic testing; defaults to Date.now. */
     now?: () => number;
 }
@@ -53,4 +58,6 @@ export declare function toAnalyticsProperties(assessment: SegmentAssessment): {
     session_driver_changed_at: number;
     session_driver_revision: number;
     session_driver_environment: "unsupported" | "browser";
+    session_driver_pointer_mode: "off" | "observe" | "classify";
+    session_driver_pointer_reasons: string[];
 };

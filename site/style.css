@@ -10,3 +10,7 @@
 #example-variant{padding:9px 18px;border:1px solid var(--line);border-radius:4px;background:var(--paper)}
 button:disabled{opacity:.5;cursor:default}
 @media(max-width:760px){.verdict{font-size:clamp(30px,8.8vw,63px);letter-spacing:-1.4px}.behavior-panel{padding:16px}}
+
+.pointer-section{padding-block:36px;line-height:1.7}.pointer-section>p{max-width:850px;font-size:14px}.pointer-targets{display:grid;grid-template-columns:1fr 1fr;gap:42px;margin-block:26px}.pointer-target{min-height:65px}.pointer-section #pointer-verdict{font-size:20px}#pointer-result{max-height:340px;overflow:auto}
+
+.validation-fields{display:grid;gap:8px;max-width:480px}.validation-fields select{min-width:0;width:100%;padding:10px;border:1px solid var(--line);background:var(--paper)}

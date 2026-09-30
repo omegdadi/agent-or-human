@@ -1,6 +1,8 @@
+import { createPointerCollector, type PointerEvidence } from './pointer.js';
+export type { PointerEvidence } from './pointer.js';
 import { detectSession, type DetectOptions, type Detection } from './index.js';
 
-export const DETECTOR_VERSION = '0.3.0';
+export const DETECTOR_VERSION = '0.4.0';
 export type Segment = 'likely_human' | 'likely_automated' | 'declared_agent' | 'unclassified';
 /** Evidence quality, not a calibrated probability of identity. */
 export type SegmentConfidence = 'insufficient' | 'heuristic' | 'strong_signal' | 'declared';
@@ -15,9 +17,12 @@ export interface SegmentAssessment {
   revision: number;
   environment: 'browser' | 'unsupported';
   detection: Detection;
+  pointer: PointerEvidence;
   behavior: { trustedEvents: number; syntheticEvents: number; modalities: string[]; activeSpanMs: number; variedCadence: boolean };
 }
 export interface ClassifierOptions extends DetectOptions {
+  /** Opt-in experimental mouse analysis. Observe exposes aggregates; classify enables uncalibrated fusion. Default off. */
+  pointerAnalysis?: 'observe' | 'classify';
   /** Optional clock for deterministic testing; defaults to Date.now. */
   now?: () => number;
 }
@@ -48,6 +53,7 @@ export function createSessionClassifier(options: ClassifierOptions = {}): Sessio
   const clock = options.now ?? Date.now;
   let lastTime = 0;
   const now = () => { const value = clock(); if (Number.isFinite(value)) lastTime = Math.max(lastTime, value); return lastTime; };
+  const pointer = createPointerCollector(options.pointerAnalysis ?? 'off');
   const samples: Sample[] = [];
   let lastSample = -Infinity;
   let lastToolInvocation = -Infinity;
@@ -55,11 +61,12 @@ export function createSessionClassifier(options: ClassifierOptions = {}): Sessio
   let current: SegmentAssessment | undefined;
   const subscribers = new Set<(value: SegmentAssessment) => void>();
   const removers: (() => void)[] = [];
-  const copy = (value: SegmentAssessment): SegmentAssessment => ({ ...value, reasons: [...value.reasons], behavior: { ...value.behavior, modalities: [...value.behavior.modalities] }, detection: { ...value.detection, signals: value.detection.signals.map(signal => ({ ...signal })) } });
+  const copy = (value: SegmentAssessment): SegmentAssessment => ({ ...value, pointer: { ...value.pointer, reasons: [...value.pointer.reasons] }, reasons: [...value.reasons], behavior: { ...value.behavior, modalities: [...value.behavior.modalities] }, detection: { ...value.detection, signals: value.detection.signals.map(signal => ({ ...signal })) } });
   function refresh(): SegmentAssessment {
     if (stopped && current) return copy(current);
     const timestamp = now();
     while (samples.length && timestamp - samples[0].time > 30_000) samples.shift();
+    const pointerEvidence = pointer.snapshot(timestamp);
     const detection = detectSession({ ...options, scope });
     const toolUsed = timestamp - lastToolInvocation <= 30_000;
     if (toolUsed && detection.verdict !== 'unsupported') detection.signals.push({ code: 'webmcp-tool-invoked', strength: 'weak' });
@@ -80,13 +87,15 @@ export function createSessionClassifier(options: ClassifierOptions = {}): Sessio
       segment = 'likely_automated'; confidence = 'strong_signal'; basis = 'browser_signal'; reasons = ['webdriver'];
     } else if (toolUsed) {
       segment = 'likely_automated'; confidence = 'heuristic'; basis = 'browser_signal'; reasons = ['webmcp-tool-invoked'];
+    } else if (options.pointerAnalysis === 'classify' && pointerEvidence.automationPattern) {
+      segment = 'likely_automated'; confidence = 'heuristic'; basis = 'behavior'; reasons = [...pointerEvidence.reasons];
     } else if (codes.includes('headless-user-agent') && synthetic.length >= 12 && synthetic.length / samples.length >= 0.9 && synthetic[synthetic.length - 1].time - synthetic[0].time >= 3000 && cadence(synthetic).regular) {
       segment = 'likely_automated'; confidence = 'heuristic'; basis = 'behavior'; reasons = ['headless-user-agent', 'regular-synthetic-input'];
-    } else if (!codes.includes('headless-user-agent') && !codes.includes('agent-ui-indicator') && variedCadence && trusted.length / samples.length >= 0.9 && ((trusted.length >= 6 && activeSpanMs >= 3000 && modalities.length >= 2) || (trusted.length >= 10 && activeSpanMs >= 6000))) {
+    } else if (!(options.pointerAnalysis === 'classify' && pointerEvidence.reasons.length) && !codes.includes('headless-user-agent') && !codes.includes('agent-ui-indicator') && variedCadence && trusted.length / samples.length >= 0.9 && ((trusted.length >= 6 && activeSpanMs >= 3000 && modalities.length >= 2) || (trusted.length >= 10 && activeSpanMs >= 6000))) {
       segment = 'likely_human'; confidence = 'heuristic'; basis = 'behavior'; reasons = ['varied-trusted-interactions', modalities.length >= 2 ? 'multiple-input-modalities' : 'sustained-single-modality'];
     } else if (detection.verdict === 'human') reasons = ['human-declaration-not-independently-verified'];
     const changed = current !== undefined && (current.segment !== segment || current.confidence !== confidence || current.basis !== basis);
-    current = { segment, confidence, basis, reasons, detectorVersion: DETECTOR_VERSION, assessedAt: timestamp, changedAt: !current || changed ? timestamp : current.changedAt, revision: current ? current.revision + Number(changed) : 0, environment: detection.verdict === 'unsupported' ? 'unsupported' : 'browser', detection, behavior: { trustedEvents: trusted.length, syntheticEvents: synthetic.length, modalities, activeSpanMs, variedCadence } };
+    current = { segment, confidence, basis, reasons, detectorVersion: DETECTOR_VERSION, assessedAt: timestamp, changedAt: !current || changed ? timestamp : current.changedAt, revision: current ? current.revision + Number(changed) : 0, environment: detection.verdict === 'unsupported' ? 'unsupported' : 'browser', detection, pointer: pointerEvidence, behavior: { trustedEvents: trusted.length, syntheticEvents: synthetic.length, modalities, activeSpanMs, variedCadence } };
     if (changed) for (const listener of [...subscribers]) {
       // Analytics consumer failures must not break classification or other subscribers.
       try { listener(copy(current)); } catch { /* Consumer owns its reporting errors. */ }
@@ -96,6 +105,29 @@ export function createSessionClassifier(options: ClassifierOptions = {}): Sessio
   refresh();
   try {
     if (scope?.document && scope.addEventListener && scope.removeEventListener) {
+      if (options.pointerAnalysis) {
+        for (const type of ['pointermove', 'pointerdown', 'pointerup']) {
+          const listener = (event: { isTrusted: boolean }) => {
+            if (stopped) return;
+            try {
+              const doc = scope.document as { visibilityState?: string; pointerLockElement?: unknown };
+              if (doc.visibilityState === 'hidden' || doc.pointerLockElement) { pointer.reset(); return; }
+              pointer.record(type, event, now());
+              if (type === 'pointerup') refresh();
+            } catch { pointer.reset(); }
+          };
+          scope.addEventListener(type, listener, true);
+          removers.push(() => scope.removeEventListener?.(type, listener, true));
+        }
+        for (const type of ['blur', 'resize', 'scroll', 'pointercancel', 'pointerout', 'visibilitychange', 'pointerlockchange']) {
+          const listener = (event: { isTrusted: boolean; relatedTarget?: unknown; target?: unknown }) => {
+            if (type === 'blur' && event.target !== scope) return;
+            if (type !== 'pointerout' || event.relatedTarget == null) pointer.reset();
+          };
+          scope.addEventListener(type, listener, true);
+          removers.push(() => scope.removeEventListener?.(type, listener, true));
+        }
+      }
       for (const [type, modality] of [['pointerdown', 'pointer'], ['keydown', 'keyboard'], ['wheel', 'scroll']]) {
         const listener = (event: { isTrusted: boolean; repeat?: boolean }) => {
           if (stopped || event.repeat) return;
@@ -121,7 +153,7 @@ export function createSessionClassifier(options: ClassifierOptions = {}): Sessio
       };
     },
     subscribe(listener) { if (stopped) return () => {}; subscribers.add(listener); return () => { subscribers.delete(listener); }; },
-    stop() { if (stopped) return; stopped = true; for (const remove of removers) { try { remove(); } catch { /* restricted host */ } } subscribers.clear(); samples.length = 0; },
+    stop() { if (stopped) return; stopped = true; for (const remove of removers) { try { remove(); } catch { /* restricted host */ } } subscribers.clear(); samples.length = 0; pointer.clear(); },
   };
 }
 /** Flattened event properties for your existing analytics client. Sends nothing. */
@@ -137,5 +169,7 @@ export function toAnalyticsProperties(assessment: SegmentAssessment) {
     session_driver_changed_at: assessment.changedAt,
     session_driver_revision: assessment.revision,
     session_driver_environment: assessment.environment,
+    session_driver_pointer_mode: assessment.pointer.mode,
+    session_driver_pointer_reasons: [...assessment.pointer.reasons],
   };
 }

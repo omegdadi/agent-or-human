@@ -8,7 +8,7 @@
 <link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<header class="nav wrap"><a class="brand" href="#top" aria-label="Session Driver home"><span class="brandmark">s/</span> session driver<span class="version">v0.3</span></a><a class="source" href="https://github.com/omegdadi/session-driver" target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a></header>
+<header class="nav wrap"><a class="brand" href="#top" aria-label="Session Driver home"><span class="brandmark">s/</span> session driver<span class="version">v0.4</span></a><a class="source" href="https://github.com/omegdadi/session-driver" target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a></header>
 <main>
 <section class="hero wrap" id="top" aria-labelledby="hero-title">
 <div class="eyebrow"><span class="dot"></span> LIVE ANALYTICS SEGMENT <span class="local">Everything runs on your device</span></div>
@@ -25,6 +25,16 @@
 <noscript><p class="notice">Enable JavaScript to run this browser experiment. No detection has taken place.</p></noscript>
 <div class="metrics" aria-label="Session measurements"><div><span id="check-count">0</span><small>VERIFICATION RUNS</small></div><div><span id="trusted-count">0</span><small>TRUSTED INPUT EVENTS</small></div><div><span id="synthetic-count">0</span><small>SYNTHETIC INPUT EVENTS</small></div><div><span id="scroll-count">0</span><small>SCROLL CHECKPOINTS</small></div></div>
 <p class="footnote">Trusted events can come from automation, too. The classifier uses a bounded 30-second activity window; these totals count raw input. Confidence describes evidence quality, not a probability.</p>
+</section>
+<section class="wrap pointer-section" aria-labelledby="pointer-title">
+<div class="eyebrow">EXPERIMENTAL / MULTIPLE SIGNALS</div><h2 id="pointer-title">Watch the input, not just the flag.</h2>
+<p>Use these ordinary buttons in any order, or browse the rest of the page. Mouse analysis combines repeated sparse jumps or uniform straight paths with short presses or exact-center targeting. Speed alone never decides. Touch, keyboard, and pen are excluded from these mouse rules.</p>
+<p><strong id="pointer-verdict" role="status">UNCLASSIFIED</strong> · Experimental inference enabled on this demo. Thresholds are not calibrated against real human traffic.</p>
+<div class="pointer-targets"><button class="secondary pointer-target">North</button><button class="secondary pointer-target">East</button><button class="secondary pointer-target">West</button><button class="secondary pointer-target">South</button></div>
+<div class="validation-fields"><label for="validation-driver">Who is actually operating this test?</label><select id="validation-driver"><option value="unlabeled">Not labeled</option><option value="human">Human (self-reported)</option><option value="agent">Agent (self-reported)</option><option value="mixed">Mixed / handoff</option></select><label for="validation-input">Input method</label><select id="validation-input"><option value="unknown">Unknown</option><option>Mouse</option><option>Trackpad</option><option>Keyboard</option><option>Touch / pen</option><option>Assistive technology</option><option>Remote desktop</option><option>Browser automation</option></select><p>Optional labels are saved only in your downloaded results. They never feed the classifier.</p></div>
+<p id="pointer-action" role="status">No target selected. This is an input measurement sandbox, not an access challenge.</p>
+<details class="raw" open><summary>Live pointer measurements</summary><pre id="pointer-result"></pre></details>
+<p class="footnote">Recent coordinates are processed locally in a bounded buffer and never exported. The download includes aggregate counts only. Assistive tools, remote desktops, timer precision, and device differences can resemble automation. <a href="https://github.com/omegdadi/session-driver/blob/main/RESEARCH.md">Read the standards research and validation plan ↗</a></p>
 </section>
 <section class="evidence-section"><div class="wrap">
 <div class="section-heading"><div><div class="eyebrow">01 / THE EVIDENCE</div><h2>Show your working.</h2></div><p>No mystery score. No fingerprinting.<br>Just the signals, and what they mean.</p></div>

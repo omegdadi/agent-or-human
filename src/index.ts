@@ -147,4 +147,4 @@ export function observeSession(options: DetectOptions = {}): SessionObserver {
 }
 
 export { createSessionClassifier, toAnalyticsProperties, DETECTOR_VERSION } from './analytics.js';
-export type { Segment, SegmentConfidence, SegmentAssessment, ClassifierOptions, SessionClassifier } from './analytics.js';
+export type { Segment, SegmentConfidence, SegmentAssessment, ClassifierOptions, SessionClassifier, PointerEvidence } from './analytics.js';

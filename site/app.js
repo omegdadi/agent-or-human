@@ -2,7 +2,7 @@ import { detectSession, observeSession, createSessionClassifier, toAnalyticsProp
 const $ = id => document.getElementById(id);
 const observer = observeSession();
 const history = [];
-const classifier = createSessionClassifier();
+const classifier = createSessionClassifier({ pointerAnalysis: 'classify' });
 const transitions = [];
 const experimentEvents = [];
 let exposure = null;
@@ -21,12 +21,14 @@ function renderAssessment(assessment) {
   $('behavior-progress').textContent = `${assessment.behavior.trustedEvents} accepted trusted interactions · ${(assessment.behavior.activeSpanMs / 1000).toFixed(1)}s of activity · ${assessment.behavior.modalities.length} input types · ${assessment.behavior.variedCadence ? 'varied timing' : 'more timing variation needed'}`;
   $('segment-reasons').textContent = `Evidence: ${assessment.reasons.join(', ')} · Confidence: ${assessment.confidence} · Detector: ${assessment.detectorVersion}`;
   renderSignals(assessment.detection);
+  $('pointer-result').textContent = JSON.stringify(assessment.pointer, null, 2);
+  $('pointer-verdict').textContent = describeSegment(assessment)[0];
 }
 classifier.subscribe(assessment => {
   transitions.unshift(toAnalyticsProperties(assessment)); transitions.length = Math.min(transitions.length, 32);
   renderAssessment(assessment);
 });
-for (const type of ['pointerdown', 'keydown', 'wheel']) window.addEventListener(type, () => requestAnimationFrame(() => renderAssessment(classifier.getSnapshot())), { passive: true });
+for (const type of ['pointerdown', 'pointerup', 'keydown', 'wheel']) window.addEventListener(type, () => requestAnimationFrame(() => renderAssessment(classifier.getSnapshot())), { passive: true });
 let checks = 0;
 let checkpoints = 0;
 const describe = result => ({
@@ -137,7 +139,7 @@ for (const id of [...flags.map(flag => `lab-${flag}`), 'lab-declaration']) $(id)
   renderLab();
 });
 $('download').addEventListener('click', () => {
-  const data = { library: '@omegdadi/session-driver', version: DETECTOR_VERSION, exportedAt: new Date().toISOString(), checks, scrollCheckpoints: checkpoints, interactions: observer.getSnapshot().interactions, history, segmentTransitions: transitions, experimentEvents };
+  const data = { library: '@omegdadi/session-driver', version: DETECTOR_VERSION, exportedAt: new Date().toISOString(), checks, scrollCheckpoints: checkpoints, interactions: observer.getSnapshot().interactions, history, segmentTransitions: transitions, experimentEvents, validationContext: { driver: $('validation-driver').value, inputMethod: $('validation-input').value, source: 'self-reported-not-used-by-classifier' } };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
   const link = document.createElement('a'); link.href = url; link.download = 'session-driver-results.json'; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -187,3 +189,5 @@ async function registerReverifyTool() {
   }
 }
 registerReverifyTool();
+
+for (const button of document.querySelectorAll('.pointer-target')) button.addEventListener('click', () => { $('pointer-action').textContent = `${button.textContent} selected. No task is gated by this measurement.`; renderAssessment(classifier.refresh()); });

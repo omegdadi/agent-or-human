@@ -67,7 +67,7 @@ test('notebook is bounded and exports genuine checks as JSON', async ({ page }) 
   expect(result.history).toHaveLength(12); expect(result.checks).toBeGreaterThanOrEqual(15);
   expect(result.library).toBe('@omegdadi/session-driver');
   expect(result.history[0].segment).toBe((await page.locator('#verdict').textContent()).toLowerCase().replaceAll(' ', '_'));
-  expect(result.version).toBe('0.3.0');
+  expect(result.version).toBe('0.4.0');
   expect(result.segmentTransitions.length).toBeGreaterThan(0);
 });
 test('mobile fits screen and switches work with keyboard', async ({ page }) => {
@@ -121,5 +121,27 @@ test('WebMCP registration and clicks do not classify; an instrumented execution 
   expect(JSON.parse(response.content[0].text).session_driver_reasons).toEqual(['webmcp-tool-invoked']);
   await expect(page.locator('#verdict')).toHaveText('AGENT TOOL USED');
   await expect(page.locator('#basis')).toContainText('heuristic');
+  expect(await page.evaluate(() => window.__SESSION_DRIVER__)).toBeUndefined();
+});
+
+test('ordinary mouse automation is inferred from multiple signals with webdriver hidden', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'webdriver', { value: false });
+    Object.defineProperty(navigator, 'userAgent', { value: 'Mozilla/5.0 Chrome/154.0 Safari/537.36' });
+  });
+  await open(page);
+  for (const name of ['North','East','North','East','North','East']) await page.getByRole('button', { name, exact: true }).click();
+  await expect(page.locator('#verdict')).toHaveText('LIKELY AUTOMATED');
+  const result = JSON.parse(await page.locator('#raw-result').textContent());
+  expect(result.basis).toBe('behavior'); expect(result.confidence).toBe('heuristic');
+  expect(result.pointer.sparseTransitions).toBeGreaterThanOrEqual(4);
+  expect(result.reasons).toContain('repeated-exact-center-clicks');
+  expect(result.detection.automated).toBeNull(); expect(result.detection.agentic).toBeNull();
+  expect(result.reasons).not.toContain('webmcp-tool-invoked');
+});
+test('validation labels never become detector declarations', async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(navigator, 'webdriver', { value: false }));
+  await open(page); await page.locator('#validation-driver').selectOption('agent');
+  await expect(page.locator('#verdict')).toHaveText('UNCLASSIFIED');
   expect(await page.evaluate(() => window.__SESSION_DRIVER__)).toBeUndefined();
 });
