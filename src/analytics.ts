@@ -145,7 +145,7 @@ export function createSessionClassifier(options: ClassifierOptions = {}): Sessio
         const listener = (event: { isTrusted: boolean; repeat?: boolean; pointerType?: string; isPrimary?: boolean; detail?: number; touches?: { length: number }; sourceCapabilities?: { firesTouchEvents?: boolean } }) => {
           if (stopped || event.repeat) return;
           const time = now();
-          if (event.isPrimary === false || (type === 'touchstart' && event.touches && event.touches.length !== 1)) return;
+          if ((type === 'pointerdown' && event.isPrimary === false) || (type === 'touchstart' && event.touches && event.touches.length !== 1)) return;
           if (type === 'touchstart' || (type === 'pointerdown' && event.pointerType === 'touch')) lastTouch = time;
           // Compatibility mouse events after touch are the same gesture, not another modality.
           if (type === 'mousedown' && (event.sourceCapabilities?.firesTouchEvents || time - lastTouch < 1000)) return;

@@ -120,7 +120,7 @@ test('legacy touch and compatibility mouse/click count as one input, not three',
 });
 test('standalone accessible activation is accepted but keyboard clicks and long presses are not double counted', () => {
   const f = fixture();
-  for (const gap of variedGaps) f.event('click', gap, true, false, { detail: 0 });
+  for (const gap of variedGaps) f.event('click', gap, true, false, { detail: 0, isPrimary: false });
   assert.equal(f.classifier.getSnapshot().segment, 'likely_human');
   const k = fixture();
   k.event('keydown'); k.event('click', 200, true, false, { detail: 0 });
