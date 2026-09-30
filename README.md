@@ -10,13 +10,13 @@ Small, zero-runtime-dependency browser automation detector with explainable evid
 
 ## Install
 
-Install the published GitHub release with npm (no build tools required):
+Install from the public npm registry (no build tools required):
 
 ```sh
-npm install https://github.com/omegdadi/session-driver/releases/download/v0.6.0/agent-or-human-0.6.0.tgz
+npm install agent-or-human
 ```
 
-The installed package name is `agent-or-human`. npm registry publication is pending; the GitHub release is the installable distribution. See [PUBLISHING.md](./PUBLISHING.md) for the registry release process. The existing repository and demo URLs remain stable.
+[`agent-or-human@0.6.0`](https://www.npmjs.com/package/agent-or-human) is published publicly under the `omegdadi` npm account. Fresh registry installs have been verified with ESM and CommonJS consumers. See [PUBLISHING.md](./PUBLISHING.md) for release maintenance. The repository and demo currently retain the `session-driver` URL.
 
 ```js
 import { detectSession } from 'agent-or-human';

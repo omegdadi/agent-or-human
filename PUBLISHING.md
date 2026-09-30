@@ -1,8 +1,8 @@
 # Publishing Agent or Human
 
-The npm package name is `agent-or-human`. The source repository and demo stay at `omegdadi/session-driver` so existing links keep working. No npm registry release has been made under the new name yet. Registry availability checks do not reserve a name or guarantee acceptance.
+The npm package name is `agent-or-human`. The source repository and demo stay at `omegdadi/session-driver` so existing links keep working. `agent-or-human@0.6.0` is now published publicly on npm under `omegdadi`; registry tarball SHA-1 is `945bf0f289d3a49366902819f405a0c0d5f3c50f`, matching the tested release artifact. Fresh ESM/CommonJS registry installs passed. Trusted publishing still requires configuration in the npm package settings.
 
-## First npm release
+## Release process
 
 Use Node 22.14+ and npm 11.5.1+ for trusted publishing. Run `npm ci`, `npm test`, `npm run test:browser`, `npm run test:inputs`, `npm run test:package`, and the demo suite before release. Inspect `npm pack --dry-run` and ensure the Git checkout is clean. Package contents must match the tagged release.
 
