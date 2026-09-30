@@ -133,3 +133,15 @@ test('secondary contacts and multitouch starts do not inflate samples', () => {
   f.event('touchstart', 500, true, false, { touches: { length: 2 } });
   assert.equal(f.classifier.getSnapshot().behavior.trustedEvents, 0);
 });
+
+test('long touches and held-key release do not create a second compatibility activation', () => {
+  const f = fixture({}, false);
+  f.event('touchstart', 500, true, false, { touches: { length: 1 } });
+  f.event('touchend', 2000);
+  f.event('mousedown', 200);
+  f.event('click', 0, true, false, { detail: 1 });
+  f.event('keydown', 2000);
+  f.event('keyup', 2000);
+  f.event('click', 0, true, false, { detail: 0 });
+  assert.equal(f.classifier.getSnapshot().behavior.trustedEvents, 2);
+});

@@ -130,6 +130,17 @@ export function createSessionClassifier(options: ClassifierOptions = {}): Sessio
       if (!scope.PointerEvent) inputs.push(['touchstart', 'touch'], ['mousedown', 'mouse']);
       let lastTouch = -Infinity;
       let lastDirectInput = -Infinity;
+      // Use release time too: a held key or long touch must not become a second
+      // activation when the browser dispatches its compatibility click on release.
+      for (const type of ['keyup', ...(!scope.PointerEvent ? ['touchend', 'touchcancel'] : [])]) {
+        const listener = () => {
+          if (stopped) return;
+          lastDirectInput = now();
+          if (type !== 'keyup') lastTouch = lastDirectInput;
+        };
+        scope.addEventListener(type, listener, true);
+        removers.push(() => scope.removeEventListener?.(type, listener, true));
+      }
       for (const [type, defaultModality] of inputs) {
         const listener = (event: { isTrusted: boolean; repeat?: boolean; pointerType?: string; isPrimary?: boolean; detail?: number; touches?: { length: number }; sourceCapabilities?: { firesTouchEvents?: boolean } }) => {
           if (stopped || event.repeat) return;
