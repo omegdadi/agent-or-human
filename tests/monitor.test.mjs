@@ -88,3 +88,51 @@ test('stop cancels timers and removes AbortSignal hooks; handlers can be cleared
   scope.__SESSION_DRIVER__ = 'human'; t.mock.timers.tick(60000);
   assert.equal(monitor.assessment.assessedAt, at); assert.equal(monitor.state, 'declared_agent');
 });
+
+test('input updates raw assessments without polling or count-only events', () => {
+  let time = 1000;
+  const { monitor, listeners } = fixture({ now: () => time }); let changes = 0;
+  monitor.onassessmentchange = () => changes++;
+  for (const cb of listeners.get('pointerdown')) cb({ isTrusted: true, pointerType: 'touch' });
+  assert.equal(monitor.assessment.behavior.trustedEvents, 1);
+  assert.deepEqual(monitor.assessment.behavior.modalities, ['touch']);
+  assert.equal(changes, 0);
+  time += 31000; monitor.refresh();
+  assert.equal(monitor.assessment.behavior.trustedEvents, 0);
+  assert.equal(changes, 0); monitor.stop();
+});
+test('monitor WebMCP wrapper preserves dynamic receivers and updates before execution', () => {
+  const { monitor } = fixture();
+  const owner = { name: 'example', execute: monitor.wrapWebMCPTool(function () {
+    assert.equal(monitor.state, 'likely_automated'); return this.name;
+  }) };
+  assert.equal(owner.execute(), 'example');
+  assert.equal(owner.execute.call({ name: 'other' }), 'other'); monitor.stop();
+});
+
+test('multiple nested host updates are synchronous and do not replay stale transitions', () => {
+  const { monitor } = fixture(); const states = []; let nested = false;
+  monitor.onstatechange = event => {
+    states.push(event.state);
+    if (!nested) {
+      nested = true;
+      assert.equal(monitor.setHostState({}).segment, 'unclassified');
+      assert.equal(monitor.state, 'unclassified');
+      assert.equal(monitor.setHostState({ agentActive: true }).segment, 'declared_agent');
+      assert.equal(monitor.state, 'declared_agent');
+    }
+  };
+  monitor.setHostState({ agentActive: true });
+  assert.deepEqual(states, ['declared_agent', 'unclassified', 'declared_agent']);
+  monitor.stop();
+});
+test('nested tool execution sees updated state before its callback runs', () => {
+  const { monitor } = fixture(); let nested = false;
+  monitor.onstatechange = () => {
+    if (nested) return; nested = true;
+    monitor.setHostState({});
+    monitor.wrapWebMCPTool(() => assert.equal(monitor.state, 'likely_automated'))();
+  };
+  monitor.setHostState({ agentActive: true });
+  assert.equal(monitor.state, 'likely_automated'); monitor.stop();
+});

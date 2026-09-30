@@ -91,3 +91,13 @@ test('observer preserves host options and safely stops without a browser', () =>
   assert.equal(observer.getSnapshot().verdict, 'agent'); observer.stop();
   const native = observeSession({ scope: null }); assert.equal(native.getSnapshot().verdict, 'unsupported'); native.stop();
 });
+
+test('observer isolates errors and mutations while delivering reentrant input in order', () => {
+  const callbacks = new Map();
+  const scope = { document: {}, navigator: {}, addEventListener(type, fn) { callbacks.set(type, fn); }, removeEventListener(type) { callbacks.delete(type); } };
+  const observer = observeSession({ scope }); const counts = [];
+  observer.subscribe(value => { if (value.interactions.trusted === 1) callbacks.get('click')({ isTrusted: true }); value.interactions.trusted = 999; throw Error('consumer'); });
+  observer.subscribe(value => counts.push(value.interactions.trusted));
+  assert.doesNotThrow(() => callbacks.get('click')({ isTrusted: true }));
+  assert.deepEqual(counts, [1, 2]); observer.stop();
+});

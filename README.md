@@ -2,7 +2,7 @@
 
 AI agent and browser automation detection for website analytics and A/B tests.
 
-**[Try the live demo →](https://omegdadi.github.io/session-driver/)** · [Demo deployment](https://github.com/omegdadi/session-driver/actions/workflows/pages.yml)
+**[Try the live demo →](https://omegdadi.github.io/agent-or-human/)** · [Demo deployment](https://github.com/omegdadi/agent-or-human/actions/workflows/pages.yml)
 
 Small, zero-runtime-dependency browser automation detector with explainable evidence. TypeScript, ESM, CommonJS, and a standalone browser script. MIT licensed.
 
@@ -16,7 +16,7 @@ Install from the public npm registry (no build tools required):
 npm install agent-or-human
 ```
 
-[`agent-or-human@0.6.0`](https://www.npmjs.com/package/agent-or-human) is published publicly under the `omegdadi` npm account. Fresh registry installs have been verified with ESM and CommonJS consumers. See [PUBLISHING.md](./PUBLISHING.md) for release maintenance. The repository and demo currently retain the `session-driver` URL.
+[`agent-or-human`](https://www.npmjs.com/package/agent-or-human) is published publicly under the `omegdadi` npm account. Fresh registry installs have been verified with ESM and CommonJS consumers. See [PUBLISHING.md](./PUBLISHING.md) for release maintenance. The repository and demo use the `agent-or-human` URL.
 
 ```js
 import { detectSession } from 'agent-or-human';
@@ -43,7 +43,7 @@ classifier.subscribe(assessment => {
 
 Segments are `likely_human`, `likely_automated`, `declared_agent`, and `unclassified`. Ordinary browsing can become likely human as varied interactions accumulate. Passive visitors remain unclassified. Confidence labels describe evidence quality, not measured probabilities. Rules are **experimental and not calibrated against a labeled traffic dataset**; agents can imitate human input.
 
-Keep A/B assignment stable, retain the segment at exposure, and attach the current segment to later events. Post-treatment behavioral segments can bias causal comparisons; use them as exploratory slices alongside overall randomized results. Read [ANALYTICS.md](https://github.com/omegdadi/session-driver/blob/main/ANALYTICS.md) for integration, exact rules, privacy, and validation guidance. The package transmits nothing and never assigns variants.
+Keep A/B assignment stable, retain the segment at exposure, and attach the current segment to later events. Post-treatment behavioral segments can bias causal comparisons; use them as exploratory slices alongside overall randomized results. Read [ANALYTICS.md](https://github.com/omegdadi/agent-or-human/blob/main/ANALYTICS.md) for integration, exact rules, privacy, and validation guidance. The package transmits nothing and never assigns variants.
 
 `detectSession()` and `observeSession()` below retain their original evidence-only behavior for backward compatibility.
 
@@ -115,7 +115,7 @@ unsubscribe();
 observer.stop();
 ```
 
-Counts `pointerdown`, `keydown`, and `click` events (a click gesture can increment more than one count). Saves only aggregate trusted/synthetic counts; no keys, targets, positions, text, timestamps, cookies, or identifiers. Input never upgrades `unknown` to `human`. Subscriptions fire on observed input; call `getSnapshot()` after declarations/host changes to refresh. There is no polling or MutationObserver. `stop()` is idempotent, removes listeners, and clears subscriptions. Snapshot detection remains callable after stop; counts stop changing. Subscriber exceptions propagate to the browser's event error reporting; keep subscribers non-throwing.
+Counts `pointerdown`, `keydown`, and `click` events (a click gesture can increment more than one count). Saves only aggregate trusted/synthetic counts; no keys, targets, positions, text, timestamps, cookies, or identifiers. Input never upgrades `unknown` to `human`. Subscriptions fire on observed input; call `getSnapshot()` after declarations/host changes to refresh. There is no polling or MutationObserver. `stop()` is idempotent, removes listeners, and clears subscriptions. Snapshot detection remains callable after stop; counts stop changing. Subscriber failures are isolated; later listeners still receive their own snapshot. Reentrant input is delivered in order, and unsubscribed listeners are skipped.
 
 ## React, Next.js, Expo
 
@@ -169,13 +169,13 @@ npm ci --prefix tests/fixtures/expo
 npm run test:expo               # actual Expo/Metro export and browser rendering
 ```
 
-See [TESTING.md](https://github.com/omegdadi/session-driver/blob/main/TESTING.md) for measured results and scope. Automated tests verify behavior and known limitations; they do not measure real-world human/agent classification accuracy. OS-level control, stealth automation, remote debugging without an exposed flag, and vendor agent modes without a bridge may remain `unknown`. WebKit under Playwright is not a substitute for every Safari release.
+See [TESTING.md](https://github.com/omegdadi/agent-or-human/blob/main/TESTING.md) for measured results and scope. Automated tests verify behavior and known limitations; they do not measure real-world human/agent classification accuracy. OS-level control, stealth automation, remote debugging without an exposed flag, and vendor agent modes without a bridge may remain `unknown`. WebKit under Playwright is not a substitute for every Safari release.
 
 Built distributions are committed so GitHub installs require no build toolchain. Run `npm run build` after source edits. CI checks for distribution drift. For an npm registry release, a maintainer with access to the `@omegdadi` npm scope can run `npm publish --access public` after all checks pass. GitHub ownership does not grant npm scope ownership.
 
 ## Interactive demo
 
-[Open the public GitHub Pages demo](https://omegdadi.github.io/session-driver/) to inspect your browser, scroll to reverify, see the evidence, and export recent checks. The technique lab runs this exact library on clearly labeled simulated inputs without changing your live verdict. The live view now shows analytics segments and evidence progress; the technique lab still illustrates the original evidence-only detector. Ordinary browsing can become likely human; passive or inconclusive visits remain unclassified.
+[Open the public GitHub Pages demo](https://omegdadi.github.io/agent-or-human/) to inspect your browser, scroll to reverify, see the evidence, and export recent checks. The technique lab runs this exact library on clearly labeled simulated inputs without changing your live verdict. The live view now shows analytics segments and evidence progress; the technique lab still illustrates the original evidence-only detector. Ordinary browsing can become likely human; passive or inconclusive visits remain unclassified.
 
 The demo source lives in `site/`. The Pages workflow tests all three browser engines before deploying changes from `main`. No third-party scripts, analytics, cookies, or persistent browser storage are used by the demo. All detection and measurements run locally; GitHub Pages serves the static assets.
 
@@ -185,14 +185,14 @@ npm run build:site
 npm run test:site
 # Or preview manually:
 node scripts/serve-site.mjs
-# http://127.0.0.1:4178/session-driver/
+# http://127.0.0.1:4178/agent-or-human/
 ```
 
-To test a deployed copy: `DEMO_URL=https://omegdadi.github.io/session-driver/ npm run test:site`. The tests use fresh isolated browsers, including explicit declaration and hidden-flag cases.
+To test a deployed copy: `DEMO_URL=https://omegdadi.github.io/agent-or-human/ npm run test:site`. The tests use fresh isolated browsers, including explicit declaration and hidden-flag cases.
 
 ### Browser agents that hide WebDriver
 
-v0.3 adds `classifier.wrapWebMCPTool(execute)` to measure actual execution of your site's WebMCP tools. The [live demo](https://omegdadi.github.io/session-driver/) exposes `reverify_session`; ask a WebMCP-capable browser agent to invoke it and the page reports **AGENT TOOL USED**. Registration alone does not classify anyone. See [integration and limits](./ANALYTICS.md#measuring-actual-webmcp-tool-use-v03). Agents using only normal clicks can remain unclassified; this is not universal passive detection.
+v0.3 adds `classifier.wrapWebMCPTool(execute)` to measure actual execution of your site's WebMCP tools. The [live demo](https://omegdadi.github.io/agent-or-human/) exposes `reverify_session`; ask a WebMCP-capable browser agent to invoke it and the page reports **AGENT TOOL USED**. Registration alone does not classify anyone. See [integration and limits](./ANALYTICS.md#measuring-actual-webmcp-tool-use-v03). Agents using only normal clicks can remain unclassified; this is not universal passive detection.
 
 ### Experimental mouse/input fusion (v0.4)
 

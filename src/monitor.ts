@@ -1,4 +1,4 @@
-import { createSessionClassifier, type ClassifierOptions, type Segment, type SegmentAssessment } from './analytics.js';
+import { createClassifier, type ClassifierOptions, type Segment, type SegmentAssessment } from './analytics.js';
 import type { DetectOptions } from './index.js';
 export type SessionEventType = 'statechange' | 'assessmentchange';
 /** Structural types keep SSR/native TypeScript consumers independent of DOM libraries. */
@@ -33,7 +33,7 @@ export interface SessionMonitor {
   refresh(): SegmentAssessment;
   /** Replace host evidence, including clearing omitted fields. This is a cooperative declaration, not attestation. */
   setHostState(host: NonNullable<DetectOptions['host']>): SegmentAssessment;
-  wrapWebMCPTool<Args extends unknown[], Result>(execute: (...args: Args) => Result): (...args: Args) => Result;
+  wrapWebMCPTool<This, Args extends unknown[], Result>(execute: (this: This, ...args: Args) => Result): (this: This, ...args: Args) => Result;
   /** Remove listeners, polling, and input collection; freeze the last assessment. */
   stop(): void;
 }
@@ -55,7 +55,8 @@ export function createSessionMonitor(options: SessionMonitorOptions = {}): Sessi
   if (!Number.isFinite(interval) || interval < 0 || interval > 60000 || (interval > 0 && interval < 10)) throw new RangeError('pollIntervalMs must be 0 or between 10 and 60000');
   const scope = options.scope === undefined ? (typeof window === 'undefined' ? null : window) : options.scope;
   const host = { ...options.host };
-  const classifier = createSessionClassifier({ ...options, scope, host });
+  let receiveAssessment: ((value: SegmentAssessment) => void) | undefined;
+  const classifier = createClassifier({ ...options, scope, host }, value => receiveAssessment?.(value));
   let current = classifier.getSnapshot();
   let stopped = false;
   let dispatching = false;
@@ -97,7 +98,7 @@ export function createSessionMonitor(options: SessionMonitorOptions = {}): Sessi
       }
     } finally { dispatching = false; }
   }
-  function refresh() { if (!stopped) notify(classifier.refresh()); return copy(current); }
+  function refresh() { if (!stopped) classifier.refresh(); return copy(current); }
   const monitor: SessionMonitor = {
     get state() { return current.segment; }, get assessment() { return copy(current); }, get stopped() { return stopped; },
     get onstatechange() { return stateHandler; }, set onstatechange(listener) { if (!stopped) stateHandler = listener; },
@@ -121,7 +122,7 @@ export function createSessionMonitor(options: SessionMonitorOptions = {}): Sessi
     },
     refresh,
     setHostState(value) { if (!stopped) { host.agentActive = value.agentActive; host.debuggerAttached = value.debuggerAttached; } return refresh(); },
-    wrapWebMCPTool(execute) { return classifier.wrapWebMCPTool((...args) => { notify(classifier.getSnapshot()); return execute(...args); }); },
+    wrapWebMCPTool(execute) { return classifier.wrapWebMCPTool(execute); },
     stop() {
       if (stopped) return; stopped = true;
       classifier.stop(); for (const removeListener of removers) removeListener();
@@ -129,7 +130,8 @@ export function createSessionMonitor(options: SessionMonitorOptions = {}): Sessi
       pending.length = 0; stateHandler = null; assessmentHandler = null;
     },
   };
-  removers.push(classifier.subscribe(notify));
+  receiveAssessment = notify;
+  removers.push(() => { receiveAssessment = undefined; });
   if (current.environment === 'browser') {
     if (interval > 0) {
       const timer = setInterval(refresh, interval);

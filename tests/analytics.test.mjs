@@ -145,3 +145,36 @@ test('long touches and held-key release do not create a second compatibility act
   f.event('click', 0, true, false, { detail: 0 });
   assert.equal(f.classifier.getSnapshot().behavior.trustedEvents, 2);
 });
+
+test('reentrant subscribers receive ordered immutable transitions', () => {
+  const f = fixture(); const observed = [];
+  f.classifier.subscribe(value => {
+    if (value.segment === 'declared_agent') {
+      f.scope.__SESSION_DRIVER__ = undefined;
+      f.classifier.refresh();
+      value.reasons.length = 0;
+    }
+  });
+  f.classifier.subscribe(value => observed.push([value.segment, value.revision, [...value.reasons]]));
+  f.scope.__SESSION_DRIVER__ = 'agent'; f.classifier.refresh();
+  assert.deepEqual(observed, [['declared_agent', 1, ['declared-agent']], ['unclassified', 2, ['insufficient-interaction-evidence']]]);
+});
+test('unsubscribe and stop during dispatch suppress remaining and queued callbacks', () => {
+  for (const stop of [false, true]) {
+    const f = fixture(); let calls = 0; let unsubscribe;
+    f.classifier.subscribe(() => {
+      unsubscribe();
+      if (stop) { f.scope.__SESSION_DRIVER__ = undefined; f.classifier.refresh(); f.classifier.stop(); }
+    });
+    unsubscribe = f.classifier.subscribe(() => calls++);
+    f.scope.__SESSION_DRIVER__ = 'agent'; f.classifier.refresh();
+    assert.equal(calls, 0); f.classifier.stop();
+  }
+});
+test('WebMCP wrapper preserves the dynamic callback receiver', () => {
+  const f = fixture();
+  const owner = { factor: 3, execute: f.classifier.wrapWebMCPTool(function (value) { return this.factor * value; }) };
+  assert.equal(owner.execute(4), 12);
+  assert.equal(owner.execute.call({ factor: 5 }, 4), 20);
+  f.classifier.stop(); assert.equal(owner.execute(2), 6);
+});

@@ -1,5 +1,6 @@
 import { detectSession, observeSession, createSessionMonitor, toAnalyticsProperties, DETECTOR_VERSION } from './lib/index.js';
 const $ = id => document.getElementById(id);
+function setText(id, value) { const text = String(value); if ($(id).textContent !== text) $(id).textContent = text; }
 const observer = observeSession();
 const history = [];
 const monitor = createSessionMonitor({ pointerAnalysis: 'classify' });
@@ -15,27 +16,36 @@ const describeSegment = assessment => ({
 }[assessment.segment]);
 function renderAssessment(assessment) {
   const [word, basis, explanation] = describeSegment(assessment);
-  $('verdict').textContent = word; $('basis').textContent = basis; $('explanation').textContent = explanation;
+  setText('verdict', word); setText('basis', basis); setText('explanation', explanation);
   $('verdict-stage').dataset.state = assessment.segment;
-  $('raw-result').textContent = JSON.stringify(assessment, null, 2);
-  $('analytics-result').textContent = JSON.stringify(toAnalyticsProperties(assessment), null, 2);
-  $('behavior-progress').textContent = `${assessment.behavior.trustedEvents} accepted trusted interactions · ${(assessment.behavior.activeSpanMs / 1000).toFixed(1)}s of activity · ${assessment.behavior.modalities.length} input types · ${assessment.behavior.variedCadence ? 'varied timing' : 'more timing variation needed'}`;
-  $('segment-reasons').textContent = `Evidence: ${assessment.reasons.join(', ')} · Confidence: ${assessment.confidence} · Detector: ${assessment.detectorVersion}`;
+  setText('raw-result', JSON.stringify(assessment, null, 2));
+  setText('analytics-result', JSON.stringify(toAnalyticsProperties(assessment), null, 2));
+  setText('behavior-progress', `${assessment.behavior.trustedEvents} accepted trusted interactions · ${(assessment.behavior.activeSpanMs / 1000).toFixed(1)}s of activity · ${assessment.behavior.modalities.length} input types · ${assessment.behavior.variedCadence ? 'varied timing' : 'more timing variation needed'}`);
+  setText('segment-reasons', `Evidence: ${assessment.reasons.join(', ')} · Confidence: ${assessment.confidence} · Detector: ${assessment.detectorVersion}`);
   renderSignals(assessment.detection);
-  $('pointer-result').textContent = JSON.stringify(assessment.pointer, null, 2);
-  $('pointer-verdict').textContent = describeSegment(assessment)[0];
+  setText('pointer-result', JSON.stringify(assessment.pointer, null, 2));
+  setText('pointer-verdict', describeSegment(assessment)[0]);
 }
 monitor.addEventListener('assessmentchange', event => {
   const assessment = event.assessment;
   transitions.unshift(toAnalyticsProperties(assessment)); transitions.length = Math.min(transitions.length, 32);
-  renderAssessment(assessment);
+  scheduleAssessment();
 });
 monitor.addEventListener('statechange', event => {
   stateEvents.unshift({ previous: event.previousState, state: event.state, at: new Date().toISOString() });
   stateEvents.length = Math.min(stateEvents.length, 12);
   $('state-events').textContent = JSON.stringify(stateEvents, null, 2);
 });
-for (const type of ['pointerdown', 'pointerup', 'keydown', 'wheel']) window.addEventListener(type, () => requestAnimationFrame(() => renderAssessment(monitor.refresh())), { passive: true });
+let renderPending = false;
+function scheduleAssessment() {
+  if (renderPending) return;
+  renderPending = true;
+  requestAnimationFrame(() => { renderPending = false; renderAssessment(monitor.refresh()); });
+}
+for (const type of ['pointerdown', 'pointerup', 'keydown', 'wheel', 'touchstart', 'mousedown', 'click']) window.addEventListener(type, scheduleAssessment, { passive: true });
+// Count-only expiry does not emit assessmentchange. Reflect the monitor's latest
+// polled snapshot without making unchanged live regions announce again.
+setInterval(() => renderAssessment(monitor.assessment), 1000);
 let checks = 0;
 let checkpoints = 0;
 const describe = result => ({
@@ -55,11 +65,15 @@ const signalInfo = [
 ];
 function renderCounts() {
   const { interactions } = observer.getSnapshot();
-  $('trusted-count').textContent = interactions.trusted;
-  $('synthetic-count').textContent = interactions.synthetic;
+  setText('trusted-count', interactions.trusted);
+  setText('synthetic-count', interactions.synthetic);
 }
 observer.subscribe(renderCounts);
+let renderedSignals;
 function renderSignals(result) {
+  const key = JSON.stringify(result.signals);
+  if (key === renderedSignals) return;
+  renderedSignals = key;
   $('signals').replaceChildren(...signalInfo.map(([code, title, strength, explanation, inactive]) => {
     const signal = result.signals.find(s => code === 'declaration' ? ['declared-agent', 'declared-human', 'host-agent-active'].includes(s.code) : s.code === code);
     const card = document.createElement('article'); card.className = 'signal';

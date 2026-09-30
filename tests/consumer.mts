@@ -20,3 +20,12 @@ const monitor = createSessionMonitor({ pollIntervalMs: 0 });
 monitor.addEventListener('statechange', event => { const state: string = event.state; });
 monitor.onassessmentchange = event => { const reason: string[] = event.assessment.reasons; };
 monitor.stop();
+
+const receiver = { multiplier: 3, execute: sessionMonitorForReceiver() };
+function sessionMonitorForReceiver() {
+  const instance = createSessionMonitor({ scope: null });
+  const wrapped = instance.wrapWebMCPTool(function(this: { multiplier: number }, n: number) { return this.multiplier * n; });
+  instance.stop();
+  return wrapped;
+}
+const receiverResult: number = receiver.execute(2);

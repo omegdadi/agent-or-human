@@ -115,10 +115,25 @@ export function observeSession(options: DetectOptions = {}): SessionObserver {
   const types = ['pointerdown', 'keydown', 'click'];
   const attached: string[] = [];
   const getSnapshot = (): SessionSnapshot => ({ ...detectSession({ ...options, scope }), interactions: { trusted, synthetic } });
+  const pending: { snapshot: SessionSnapshot; listeners: ((snapshot: SessionSnapshot) => void)[] }[] = [];
+  let notifying = false;
   const onEvent = (event: { isTrusted: boolean }) => {
     if (stopped) return;
     if (event.isTrusted) trusted++; else synthetic++;
-    for (const listener of [...subscribers]) listener(getSnapshot());
+    pending.push({ snapshot: getSnapshot(), listeners: [...subscribers] });
+    if (notifying) return;
+    notifying = true;
+    try {
+      while (!stopped && pending.length) {
+        const entry = pending.shift()!;
+        for (const listener of entry.listeners) {
+          if (stopped) break;
+          if (!subscribers.has(listener)) continue;
+          const value = { ...entry.snapshot, interactions: { ...entry.snapshot.interactions }, signals: entry.snapshot.signals.map(signal => ({ ...signal })) };
+          try { listener(value); } catch { /* Isolate consumer errors from input collection and other subscribers. */ }
+        }
+      }
+    } finally { notifying = false; }
   };
   try {
     if (scope?.document && scope.addEventListener && scope.removeEventListener) {
@@ -138,7 +153,7 @@ export function observeSession(options: DetectOptions = {}): SessionObserver {
       for (const type of attached) {
         try { scope?.removeEventListener?.(type, onEvent, true); } catch { /* restricted host */ }
       }
-      subscribers.clear();
+      subscribers.clear(); pending.length = 0;
     },
   };
 }

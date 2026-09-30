@@ -1,7 +1,7 @@
 import { type PointerEvidence } from './pointer.cjs';
 export type { PointerEvidence } from './pointer.cjs';
 import { type DetectOptions, type Detection } from './index.cjs';
-export declare const DETECTOR_VERSION = "0.6.0";
+export declare const DETECTOR_VERSION = "0.6.1";
 export type Segment = 'likely_human' | 'likely_automated' | 'declared_agent' | 'unclassified';
 /** Evidence quality, not a calibrated probability of identity. */
 export type SegmentConfidence = 'insufficient' | 'heuristic' | 'strong_signal' | 'declared';
@@ -40,12 +40,14 @@ export interface SessionClassifier {
     subscribe(listener: (assessment: SegmentAssessment) => void): () => void;
     /** Wrap only a WebMCP tool's execute callback. Records recent tool use, not agent identity.
      * Page scripts can also invoke tools; this is heuristic evidence. No arguments/results are retained. */
-    wrapWebMCPTool<Args extends unknown[], Result>(execute: (...args: Args) => Result): (...args: Args) => Result;
+    wrapWebMCPTool<This, Args extends unknown[], Result>(execute: (this: This, ...args: Args) => Result): (this: This, ...args: Args) => Result;
     /** Freeze the last assessment and remove listeners. Idempotent. */
     stop(): void;
 }
 /** Opt-in, local-only analytics heuristic. No storage, network, IDs, or experiment allocation. */
 export declare function createSessionClassifier(options?: ClassifierOptions): SessionClassifier;
+/** Internal assessment channel for the monitor; public subscriptions remain transition-only. */
+export declare function createClassifier(options: ClassifierOptions, onAssessment?: (assessment: SegmentAssessment) => void): SessionClassifier;
 /** Flattened event properties for your existing analytics client. Sends nothing. */
 export declare function toAnalyticsProperties(assessment: SegmentAssessment): {
     session_driver_segment: Segment;

@@ -1,6 +1,6 @@
 {
   "name": "agent-or-human",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Detect AI agent and browser automation signals for analytics and A/B testing. Live state changes, mouse, touch, pen, and keyboard. Zero dependencies.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -32,10 +32,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/omegdadi/session-driver.git"
+    "url": "git+https://github.com/omegdadi/agent-or-human.git"
   },
-  "bugs": "https://github.com/omegdadi/session-driver/issues",
-  "homepage": "https://omegdadi.github.io/session-driver/",
+  "bugs": "https://github.com/omegdadi/agent-or-human/issues",
+  "homepage": "https://omegdadi.github.io/agent-or-human/",
   "keywords": [
     "ai-agent-detection",
     "agent-detection",

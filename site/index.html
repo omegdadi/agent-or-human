@@ -4,16 +4,16 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Agent or Human — AI Agent Detection for Website Analytics</title>
 <meta name="description" content="Open-source AI agent and browser automation detection for analytics and A/B tests. Try live session signals across mouse, touch, pen, and keyboard.">
-<link rel="canonical" href="https://omegdadi.github.io/session-driver/">
+<link rel="canonical" href="https://omegdadi.github.io/agent-or-human/">
 <meta property="og:title" content="Agent or Human — AI Agent Detection">
 <meta property="og:description" content="An open-source JavaScript library for live browser automation signals and analytics segmentation.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://omegdadi.github.io/session-driver/">
+<meta property="og:url" content="https://omegdadi.github.io/agent-or-human/">
 <meta name="theme-color" content="#f5f5ed">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<header class="nav wrap"><a class="brand" href="#top" aria-label="Agent or Human home"><span class="brandmark">a/h</span> agent or human<span class="version">v0.6</span></a><a class="source" href="https://github.com/omegdadi/session-driver" target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a></header>
+<header class="nav wrap"><a class="brand" href="#top" aria-label="Agent or Human home"><span class="brandmark">a/h</span> agent or human<span class="version">v0.6</span></a><a class="source" href="https://github.com/omegdadi/agent-or-human" target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a></header>
 <main>
 <section class="hero wrap" id="top" aria-labelledby="hero-title">
 <div class="eyebrow"><span class="dot"></span> LIVE ANALYTICS SEGMENT <span class="local">Everything runs on your device</span></div>
@@ -25,7 +25,7 @@
 <div class="verdict-bottom"><p id="explanation">Reading this page's automation signals…</p><div class="scan-mark" aria-hidden="true"><span></span><i></i></div></div>
 </div>
 <div class="hero-actions"><button class="primary" id="reverify">Reverify session <span aria-hidden="true">↻</span></button><span id="last-check">Waiting for first check</span><a class="scroll-link" href="#checkpoint">Scroll down to reverify <span aria-hidden="true">↓</span></a></div>
-<div class="behavior-panel"><strong>How the assessment develops</strong><p>Use the page naturally. Several clicks/taps and scrolls over time can support “likely human.” Keyboard-only and touch-only activity can also qualify with more evidence.</p><p id="behavior-progress" role="status"></p><p id="segment-reasons"></p></div>
+<div class="behavior-panel"><strong>How the assessment develops</strong><p>Use the page naturally. Several clicks/taps and scrolls over time can support “likely human.” Keyboard-only and touch-only activity can also qualify with more evidence.</p><p id="behavior-progress"></p><p id="segment-reasons"></p></div>
 <div class="behavior-panel"><strong>Measure browser-agent tool use</strong><p id="tool-status" role="status">Checking WebMCP support…</p><p>Ask your browser agent to reverify this session using the page’s WebMCP tool. The resulting “AGENT TOOL USED” label reports recent tool execution, not passive agent detection. An agent using only clicks or screenshots may remain unclassified. After 30 seconds of no tool use, the monitor automatically rechecks and expires this evidence.</p></div>
 <div class="behavior-panel"><strong>Live state-change events</strong><p>This page uses the monitor API. State changes appear here automatically, including evidence expiry. Background browser throttling can delay checks.</p><pre id="state-events">No state changes yet.</pre></div>
 <noscript><p class="notice">Enable JavaScript to run this browser experiment. No detection has taken place.</p></noscript>
@@ -35,12 +35,12 @@
 <section class="wrap pointer-section" aria-labelledby="pointer-title">
 <div class="eyebrow">EXPERIMENTAL / MULTIPLE SIGNALS</div><h2 id="pointer-title">Watch the input, not just the flag.</h2>
 <p>Use these ordinary buttons in any order, or browse the rest of the page. Mouse analysis combines repeated sparse jumps or uniform straight paths with short presses or exact-center targeting. Speed alone never decides. Touch, keyboard, and pen are excluded from these mouse rules.</p>
-<p><strong id="pointer-verdict" role="status">UNCLASSIFIED</strong> · Experimental inference enabled on this demo. Thresholds are not calibrated against real human traffic.</p>
+<p><strong id="pointer-verdict">UNCLASSIFIED</strong> · Experimental inference enabled on this demo. Thresholds are not calibrated against real human traffic.</p>
 <div class="pointer-targets"><button class="secondary pointer-target">North</button><button class="secondary pointer-target">East</button><button class="secondary pointer-target">West</button><button class="secondary pointer-target">South</button></div>
 <div class="validation-fields"><label for="validation-driver">Who is actually operating this test?</label><select id="validation-driver"><option value="unlabeled">Not labeled</option><option value="human">Human (self-reported)</option><option value="agent">Agent (self-reported)</option><option value="mixed">Mixed / handoff</option></select><label for="validation-input">Input method</label><select id="validation-input"><option value="unknown">Unknown</option><option>Mouse</option><option>Trackpad</option><option>Keyboard</option><option>Touch / pen</option><option>Assistive technology</option><option>Remote desktop</option><option>Browser automation</option></select><p>Optional labels are saved only in your downloaded results. They never feed the classifier.</p></div>
 <p id="pointer-action" role="status">No target selected. This is an input measurement sandbox, not an access challenge.</p>
 <details class="raw" open><summary>Live pointer measurements</summary><pre id="pointer-result"></pre></details>
-<p class="footnote">Recent coordinates are processed locally in a bounded buffer and never exported. The download includes aggregate counts only. Assistive tools, remote desktops, timer precision, and device differences can resemble automation. <a href="https://github.com/omegdadi/session-driver/blob/main/RESEARCH.md">Read the standards research and validation plan ↗</a></p>
+<p class="footnote">Recent coordinates are processed locally in a bounded buffer and never exported. The download includes aggregate counts only. Assistive tools, remote desktops, timer precision, and device differences can resemble automation. <a href="https://github.com/omegdadi/agent-or-human/blob/main/RESEARCH.md">Read the standards research and validation plan ↗</a></p>
 </section>
 <section class="evidence-section"><div class="wrap">
 <div class="section-heading"><div><div class="eyebrow">01 / THE EVIDENCE</div><h2>Show your working.</h2></div><p>No mystery score. No fingerprinting.<br>Just the signals, and what they mean.</p></div>
@@ -76,6 +76,6 @@
 <div class="honesty"><span aria-hidden="true">ⓘ</span><p><strong>Useful segments, honest limits.</strong> Likely human and behavioral automation labels are unvalidated heuristics, not verified identities or accuracy scores. Passive visitors stay unclassified. Agents can imitate human input, and people can produce automation-like patterns. Validate against labeled traffic before excluding segments from metrics. A declared agent is self-reported. Keep A/B assignment stable, preserve the segment at exposure, and report the unclassified share.</p></div>
 </section>
 </main>
-<footer class="wrap"><a class="brand" href="#top"><span class="brandmark">a/h</span> agent or human</a><p>Open source. Zero runtime dependencies. MIT licensed.</p><a href="https://github.com/omegdadi/session-driver#readme">Use it in your project ↗</a></footer>
+<footer class="wrap"><a class="brand" href="#top"><span class="brandmark">a/h</span> agent or human</a><p>Open source. Zero runtime dependencies. MIT licensed.</p><a href="https://github.com/omegdadi/agent-or-human#readme">Use it in your project ↗</a></footer>
 <script type="module" src="./app.js"></script>
 </body></html>

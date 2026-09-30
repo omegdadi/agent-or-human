@@ -67,7 +67,7 @@ test('notebook is bounded and exports genuine checks as JSON', async ({ page }) 
   expect(result.history).toHaveLength(12); expect(result.checks).toBeGreaterThanOrEqual(15);
   expect(result.library).toBe('agent-or-human');
   expect(result.history[0].segment).toBe((await page.locator('#verdict').textContent()).toLowerCase().replaceAll(' ', '_'));
-  expect(result.version).toBe('0.6.0');
+  expect(result.version).toBe('0.6.1');
   expect(result.currentAssessment.pointer.mode).toBe('classify');
   expect(result.validationContext.source).toBe('self-reported-not-used-by-classifier');
   expect(result.segmentTransitions.length).toBeGreaterThan(0);
@@ -177,4 +177,24 @@ test('live demo records statechange events from the monitor', async ({ page }) =
   for (const name of ['North','East','North','East','North','East']) await page.getByRole('button', { name, exact: true }).click();
   const events = JSON.parse(await page.locator('#state-events').textContent());
   expect(events[0].state).toBe('likely_automated'); expect(events[0].previous).toBe('unclassified');
+});
+
+test('unchanged verdicts and evidence cards stay stable; count-only expiry reaches the UI', async ({ page }) => {
+  await page.clock.install();
+  await open(page);
+  await page.evaluate(() => {
+    window.originalSignalCard = document.querySelector('#signals article');
+    window.verdictMutations = 0;
+    new MutationObserver(records => { window.verdictMutations += records.length; }).observe(document.getElementById('verdict'), { childList: true, characterData: true, subtree: true });
+  });
+  await page.getByRole('button', { name: 'Reverify session' }).click();
+  await page.clock.runFor(1100);
+  expect(await page.evaluate(() => originalSignalCard === document.querySelector('#signals article'))).toBe(true);
+  expect(await page.evaluate(() => verdictMutations)).toBe(0);
+  let snapshot = JSON.parse(await page.locator('#raw-result').textContent());
+  expect(snapshot.behavior.trustedEvents).toBeGreaterThan(0);
+  await page.clock.runFor(31000);
+  snapshot = JSON.parse(await page.locator('#raw-result').textContent());
+  expect(snapshot.behavior.trustedEvents).toBe(0);
+  await expect(page.locator('#behavior-progress')).toContainText('0 accepted trusted interactions');
 });

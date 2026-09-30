@@ -41,7 +41,7 @@ export interface SessionMonitor {
     refresh(): SegmentAssessment;
     /** Replace host evidence, including clearing omitted fields. This is a cooperative declaration, not attestation. */
     setHostState(host: NonNullable<DetectOptions['host']>): SegmentAssessment;
-    wrapWebMCPTool<Args extends unknown[], Result>(execute: (...args: Args) => Result): (...args: Args) => Result;
+    wrapWebMCPTool<This, Args extends unknown[], Result>(execute: (this: This, ...args: Args) => Result): (this: This, ...args: Args) => Result;
     /** Remove listeners, polling, and input collection; freeze the last assessment. */
     stop(): void;
 }

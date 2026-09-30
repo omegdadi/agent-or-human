@@ -2,7 +2,7 @@ import { createPointerCollector, type PointerEvidence } from './pointer.js';
 export type { PointerEvidence } from './pointer.js';
 import { detectSession, type DetectOptions, type Detection } from './index.js';
 
-export const DETECTOR_VERSION = '0.6.0';
+export const DETECTOR_VERSION = '0.6.1';
 export type Segment = 'likely_human' | 'likely_automated' | 'declared_agent' | 'unclassified';
 /** Evidence quality, not a calibrated probability of identity. */
 export type SegmentConfidence = 'insufficient' | 'heuristic' | 'strong_signal' | 'declared';
@@ -35,7 +35,7 @@ export interface SessionClassifier {
   subscribe(listener: (assessment: SegmentAssessment) => void): () => void;
   /** Wrap only a WebMCP tool's execute callback. Records recent tool use, not agent identity.
    * Page scripts can also invoke tools; this is heuristic evidence. No arguments/results are retained. */
-  wrapWebMCPTool<Args extends unknown[], Result>(execute: (...args: Args) => Result): (...args: Args) => Result;
+  wrapWebMCPTool<This, Args extends unknown[], Result>(execute: (this: This, ...args: Args) => Result): (this: This, ...args: Args) => Result;
   /** Freeze the last assessment and remove listeners. Idempotent. */
   stop(): void;
 }
@@ -48,6 +48,10 @@ function cadence(samples: Sample[]) {
 }
 /** Opt-in, local-only analytics heuristic. No storage, network, IDs, or experiment allocation. */
 export function createSessionClassifier(options: ClassifierOptions = {}): SessionClassifier {
+  return createClassifier(options);
+}
+/** Internal assessment channel for the monitor; public subscriptions remain transition-only. */
+export function createClassifier(options: ClassifierOptions, onAssessment?: (assessment: SegmentAssessment) => void): SessionClassifier {
   const scope = options.scope === undefined ? (typeof window === 'undefined' ? null : window) : options.scope;
   const clock = options.now ?? Date.now;
   let lastTime = 0;
@@ -60,6 +64,8 @@ export function createSessionClassifier(options: ClassifierOptions = {}): Sessio
   let current: SegmentAssessment | undefined;
   const subscribers = new Set<(value: SegmentAssessment) => void>();
   const removers: (() => void)[] = [];
+  const pending: { assessment: SegmentAssessment; listeners: ((value: SegmentAssessment) => void)[] }[] = [];
+  let notifying = false;
   const copy = (value: SegmentAssessment): SegmentAssessment => ({ ...value, pointer: { ...value.pointer, reasons: [...value.pointer.reasons] }, reasons: [...value.reasons], behavior: { ...value.behavior, modalities: [...value.behavior.modalities] }, detection: { ...value.detection, signals: value.detection.signals.map(signal => ({ ...signal })) } });
   function refresh(): SegmentAssessment {
     if (stopped && current) return copy(current);
@@ -93,10 +99,28 @@ export function createSessionClassifier(options: ClassifierOptions = {}): Sessio
     } else if (detection.verdict === 'human') reasons = ['human-declaration-not-independently-verified'];
     const changed = current !== undefined && (current.segment !== segment || current.confidence !== confidence || current.basis !== basis);
     current = { segment, confidence, basis, reasons, detectorVersion: DETECTOR_VERSION, assessedAt: timestamp, changedAt: !current || changed ? timestamp : current.changedAt, revision: current ? current.revision + Number(changed) : 0, environment: detection.verdict === 'unsupported' ? 'unsupported' : 'browser', detection, pointer: pointerEvidence, behavior: { trustedEvents: trusted.length, syntheticEvents: synthetic.length, modalities, activeSpanMs, variedCadence } };
-    if (changed) for (const listener of [...subscribers]) {
-      // Analytics consumer failures must not break classification or other subscribers.
-      try { listener(copy(current)); } catch { /* Consumer owns its reporting errors. */ }
-    }
+    // Capture each assessment once. Reentrant refreshes must not replace the
+    // transition being delivered to later subscribers.
+    const assessment = copy(current);
+    pending.push({ assessment, listeners: changed ? [...subscribers] : [] });
+    const alreadyNotifying = notifying;
+    notifying = true;
+    try {
+      // The monitor owns its event queue and must synchronize its properties
+      // before a nested host update or tool callback returns. Only public
+      // classifier notifications are deferred behind an in-flight transition.
+      onAssessment?.(copy(assessment));
+      if (!alreadyNotifying) {
+        while (!stopped && pending.length) {
+          const entry = pending.shift()!;
+          for (const listener of entry.listeners) {
+            if (stopped) break;
+            if (!subscribers.has(listener)) continue;
+            try { listener(copy(entry.assessment)); } catch { /* Consumer owns its reporting errors. */ }
+          }
+        }
+      }
+    } finally { notifying = alreadyNotifying; }
     return copy(current);
   }
   refresh();
@@ -168,14 +192,14 @@ export function createSessionClassifier(options: ClassifierOptions = {}): Sessio
   } catch { /* Restricted host: explicit refresh remains usable. */ }
   return {
     getSnapshot: () => copy(current!), refresh,
-    wrapWebMCPTool(execute) {
-      return (...args) => {
+    wrapWebMCPTool<This, Args extends unknown[], Result>(execute: (this: This, ...args: Args) => Result) {
+      return function (this: This, ...args: Args) {
         if (!stopped) { lastToolInvocation = now(); refresh(); }
-        return execute(...args);
+        return execute.apply(this, args);
       };
     },
     subscribe(listener) { if (stopped) return () => {}; subscribers.add(listener); return () => { subscribers.delete(listener); }; },
-    stop() { if (stopped) return; stopped = true; for (const remove of removers) { try { remove(); } catch { /* restricted host */ } } subscribers.clear(); samples.length = 0; pointer.clear(); },
+    stop() { if (stopped) return; stopped = true; for (const remove of removers) { try { remove(); } catch { /* restricted host */ } } subscribers.clear(); pending.length = 0; samples.length = 0; pointer.clear(); },
   };
 }
 /** Flattened event properties for your existing analytics client. Sends nothing. */
