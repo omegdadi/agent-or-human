@@ -2,7 +2,7 @@ import { createPointerCollector, type PointerEvidence } from './pointer.js';
 export type { PointerEvidence } from './pointer.js';
 import { detectSession, type DetectOptions, type Detection } from './index.js';
 
-export const DETECTOR_VERSION = '0.4.0';
+export const DETECTOR_VERSION = '0.5.0';
 export type Segment = 'likely_human' | 'likely_automated' | 'declared_agent' | 'unclassified';
 /** Evidence quality, not a calibrated probability of identity. */
 export type SegmentConfidence = 'insufficient' | 'heuristic' | 'strong_signal' | 'declared';

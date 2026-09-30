@@ -67,7 +67,7 @@ test('notebook is bounded and exports genuine checks as JSON', async ({ page }) 
   expect(result.history).toHaveLength(12); expect(result.checks).toBeGreaterThanOrEqual(15);
   expect(result.library).toBe('@omegdadi/session-driver');
   expect(result.history[0].segment).toBe((await page.locator('#verdict').textContent()).toLowerCase().replaceAll(' ', '_'));
-  expect(result.version).toBe('0.4.0');
+  expect(result.version).toBe('0.5.0');
   expect(result.currentAssessment.pointer.mode).toBe('classify');
   expect(result.validationContext.source).toBe('self-reported-not-used-by-classifier');
   expect(result.segmentTransitions.length).toBeGreaterThan(0);
@@ -146,4 +146,35 @@ test('validation labels never become detector declarations', async ({ page }) =>
   await open(page); await page.locator('#validation-driver').selectOption('agent');
   await expect(page.locator('#verdict')).toHaveText('UNCLASSIFIED');
   expect(await page.evaluate(() => window.__SESSION_DRIVER__)).toBeUndefined();
+});
+
+test('monitor delivers browser-style events and timer-driven expiry with real AbortSignal', async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(navigator, 'webdriver', { value: false }));
+  await open(page);
+  const result = await page.evaluate(async () => {
+    const { createSessionMonitor } = await import('./lib/index.js');
+    let time = 1000;
+    const monitor = createSessionMonitor({ now: () => time, pollIntervalMs: 20 });
+    const states = []; const abort = new AbortController(); let abortedCalls = 0;
+    monitor.addEventListener('statechange', event => states.push([event.previousState, event.state]));
+    monitor.addEventListener('statechange', () => abortedCalls++, { signal: abort.signal }); abort.abort();
+    monitor.wrapWebMCPTool(() => {})();
+    time += 31000;
+    // Only the clock is simulated; the browser's actual interval dispatches expiry.
+    await new Promise(resolve => {
+      const watchdog = setTimeout(() => { monitor.stop(); resolve(); }, 2000);
+      monitor.addEventListener('statechange', () => { clearTimeout(watchdog); resolve(); }, { once: true });
+    });
+    monitor.stop();
+    return { states, abortedCalls, stopped: monitor.stopped };
+  });
+  expect(result.states).toEqual([['unclassified','likely_automated'],['likely_automated','unclassified']]);
+  expect(result.abortedCalls).toBe(0); expect(result.stopped).toBe(true);
+});
+test('live demo records statechange events from the monitor', async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(navigator, 'webdriver', { value: false }));
+  await open(page);
+  for (const name of ['North','East','North','East','North','East']) await page.getByRole('button', { name, exact: true }).click();
+  const events = JSON.parse(await page.locator('#state-events').textContent());
+  expect(events[0].state).toBe('likely_automated'); expect(events[0].previous).toBe('unclassified');
 });

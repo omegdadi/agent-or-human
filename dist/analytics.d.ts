@@ -1,7 +1,7 @@
 import { type PointerEvidence } from './pointer.js';
 export type { PointerEvidence } from './pointer.js';
 import { type DetectOptions, type Detection } from './index.js';
-export declare const DETECTOR_VERSION = "0.4.0";
+export declare const DETECTOR_VERSION = "0.5.0";
 export type Segment = 'likely_human' | 'likely_automated' | 'declared_agent' | 'unclassified';
 /** Evidence quality, not a calibrated probability of identity. */
 export type SegmentConfidence = 'insufficient' | 'heuristic' | 'strong_signal' | 'declared';
@@ -57,7 +57,7 @@ export declare function toAnalyticsProperties(assessment: SegmentAssessment): {
     session_driver_assessed_at: number;
     session_driver_changed_at: number;
     session_driver_revision: number;
-    session_driver_environment: "unsupported" | "browser";
+    session_driver_environment: "browser" | "unsupported";
     session_driver_pointer_mode: "off" | "observe" | "classify";
     session_driver_pointer_reasons: string[];
 };

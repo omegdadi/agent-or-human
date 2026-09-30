@@ -1,8 +1,9 @@
-import { detectSession, observeSession, createSessionClassifier, toAnalyticsProperties, DETECTOR_VERSION } from './lib/index.js';
+import { detectSession, observeSession, createSessionMonitor, toAnalyticsProperties, DETECTOR_VERSION } from './lib/index.js';
 const $ = id => document.getElementById(id);
 const observer = observeSession();
 const history = [];
-const classifier = createSessionClassifier({ pointerAnalysis: 'classify' });
+const monitor = createSessionMonitor({ pointerAnalysis: 'classify' });
+const stateEvents = [];
 const transitions = [];
 const experimentEvents = [];
 let exposure = null;
@@ -24,11 +25,17 @@ function renderAssessment(assessment) {
   $('pointer-result').textContent = JSON.stringify(assessment.pointer, null, 2);
   $('pointer-verdict').textContent = describeSegment(assessment)[0];
 }
-classifier.subscribe(assessment => {
+monitor.addEventListener('assessmentchange', event => {
+  const assessment = event.assessment;
   transitions.unshift(toAnalyticsProperties(assessment)); transitions.length = Math.min(transitions.length, 32);
   renderAssessment(assessment);
 });
-for (const type of ['pointerdown', 'pointerup', 'keydown', 'wheel']) window.addEventListener(type, () => requestAnimationFrame(() => renderAssessment(classifier.getSnapshot())), { passive: true });
+monitor.addEventListener('statechange', event => {
+  stateEvents.unshift({ previous: event.previousState, state: event.state, at: new Date().toISOString() });
+  stateEvents.length = Math.min(stateEvents.length, 12);
+  $('state-events').textContent = JSON.stringify(stateEvents, null, 2);
+});
+for (const type of ['pointerdown', 'pointerup', 'keydown', 'wheel']) window.addEventListener(type, () => requestAnimationFrame(() => renderAssessment(monitor.refresh())), { passive: true });
 let checks = 0;
 let checkpoints = 0;
 const describe = result => ({
@@ -67,7 +74,7 @@ function renderSignals(result) {
   }));
 }
 function verify(trigger) {
-  const result = classifier.refresh();
+  const result = monitor.refresh();
   const [word, basis] = describeSegment(result);
   const now = new Date();
   checks++;
@@ -139,7 +146,7 @@ for (const id of [...flags.map(flag => `lab-${flag}`), 'lab-declaration']) $(id)
   renderLab();
 });
 $('download').addEventListener('click', () => {
-  const data = { library: '@omegdadi/session-driver', version: DETECTOR_VERSION, exportedAt: new Date().toISOString(), currentAssessment: classifier.refresh(), checks, scrollCheckpoints: checkpoints, interactions: observer.getSnapshot().interactions, history, segmentTransitions: transitions, experimentEvents, validationContext: { driver: $('validation-driver').value, inputMethod: $('validation-input').value, source: 'self-reported-not-used-by-classifier' } };
+  const data = { library: '@omegdadi/session-driver', version: DETECTOR_VERSION, exportedAt: new Date().toISOString(), currentAssessment: monitor.refresh(), checks, scrollCheckpoints: checkpoints, interactions: observer.getSnapshot().interactions, history, segmentTransitions: transitions, experimentEvents, stateEvents, validationContext: { driver: $('validation-driver').value, inputMethod: $('validation-input').value, source: 'self-reported-not-used-by-classifier' } };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
   const link = document.createElement('a'); link.href = url; link.download = 'session-driver-results.json'; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -147,21 +154,21 @@ $('download').addEventListener('click', () => {
 function renderExperiment() { $('experiment-result').textContent = experimentEvents.length ? JSON.stringify(experimentEvents, null, 2) : 'No example events recorded. Nothing is sent to a server.'; }
 $('record-exposure').addEventListener('click', () => {
   if (exposure) return;
-  exposure = { variant: $('example-variant').value, properties: toAnalyticsProperties(classifier.refresh()) };
+  exposure = { variant: $('example-variant').value, properties: toAnalyticsProperties(monitor.refresh()) };
   experimentEvents.push({ event: 'example_exposure', variant: exposure.variant, ...exposure.properties });
   $('example-variant').disabled = true; $('record-exposure').disabled = true; $('record-conversion').disabled = false;
   renderExperiment();
 });
 $('record-conversion').addEventListener('click', () => {
   if (!exposure) return;
-  experimentEvents.push({ event: 'example_conversion', variant: exposure.variant, segment_at_exposure: exposure.properties.session_driver_segment, ...toAnalyticsProperties(classifier.refresh()) });
+  experimentEvents.push({ event: 'example_conversion', variant: exposure.variant, segment_at_exposure: exposure.properties.session_driver_segment, ...toAnalyticsProperties(monitor.refresh()) });
   if (experimentEvents.length > 12) experimentEvents.splice(1, 1);
   renderExperiment();
 });
 $('reset-experiment').addEventListener('click', () => { exposure = null; experimentEvents.length = 0; $('example-variant').disabled = false; $('record-exposure').disabled = false; $('record-conversion').disabled = true; renderExperiment(); });
 window.addEventListener('pageshow' , event => { if (event.persisted) verify('Page restored'); });
 verify('Page loaded');
-transitions.push(toAnalyticsProperties(classifier.getSnapshot()));
+transitions.push(toAnalyticsProperties(monitor.assessment));
 renderExperiment();
 $('scenario-note').textContent = scenarios.ordinary.note;
 renderLab();
@@ -178,9 +185,9 @@ async function registerReverifyTool() {
       name: 'reverify_session',
       description: 'Reverify this page’s session and return its analytics evidence. Invoking this tool records recent WebMCP tool use in the local classifier; it does not declare or authenticate an agent. No data is sent to a server.',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-      execute: classifier.wrapWebMCPTool(() => {
+      execute: monitor.wrapWebMCPTool(() => {
         verify('WebMCP tool');
-        return { content: [{ type: 'text', text: JSON.stringify(toAnalyticsProperties(classifier.getSnapshot())) }] };
+        return { content: [{ type: 'text', text: JSON.stringify(toAnalyticsProperties(monitor.assessment)) }] };
       }),
     });
     $('tool-status').textContent = 'Ready: a browser agent can call reverify_session. Availability alone does not change your segment.';
@@ -190,4 +197,4 @@ async function registerReverifyTool() {
 }
 registerReverifyTool();
 
-for (const button of document.querySelectorAll('.pointer-target')) button.addEventListener('click', () => { $('pointer-action').textContent = `${button.textContent} selected. No task is gated by this measurement.`; renderAssessment(classifier.refresh()); });
+for (const button of document.querySelectorAll('.pointer-target')) button.addEventListener('click', () => { $('pointer-action').textContent = `${button.textContent} selected. No task is gated by this measurement.`; renderAssessment(monitor.refresh()); });

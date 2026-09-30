@@ -63,3 +63,5 @@ export interface SessionObserver {
 export declare function observeSession(options?: DetectOptions): SessionObserver;
 export { createSessionClassifier, toAnalyticsProperties, DETECTOR_VERSION } from './analytics.cjs';
 export type { Segment, SegmentConfidence, SegmentAssessment, ClassifierOptions, SessionClassifier, PointerEvidence } from './analytics.cjs';
+export { createSessionMonitor } from './monitor.cjs';
+export type { SessionMonitor, SessionMonitorOptions, SessionChangeEvent, SessionEventType, SessionEventListener, SessionListenerOptions, SessionAbortSignal } from './monitor.cjs';

@@ -50,3 +50,9 @@ Adds 11 deterministic classifier tests for passive traffic, varied input, keyboa
 - 33 site tests across Chromium, Firefox, and WebKit, including ordinary mouse clicks with webdriver hidden and no WebMCP invocation. Optional validation labels are not detector input.
 - Native Codex IAB verification: ordinary alternating target clicks produced 6 gestures, 5 sparse transitions, 6 short presses, and 6 exact-center hits; classification changed to likely_automated with behavioral reasons. WebDriver was not exposed and no declaration/tool-use signal was supplied. Speed was not measurable in that example.
 - This is implementation verification and a single-controller demonstration, not a labeled human/agent accuracy benchmark. See RESEARCH.md for validation design and unimplemented contract proposals.
+
+## v0.5 live monitor
+
+- 45 unit tests and ESM/CJS TypeScript consumers cover state/evidence event distinction, previous/current snapshots, initial reads, deduplication, removal, once, AbortSignal, object listeners, reentrant transitions, consumer isolation, timer expiry, external declarations, lifecycle wake, and stop cleanup.
+- 39 browser demo tests across Chromium, Firefox, and WebKit include native AbortSignal listeners and a real browser interval with an injected clock for evidence expiry. The UI records actual monitor statechange events.
+- Existing classifier.subscribe remains timer-free and compatible. The new monitor is a scoped emitter with browser-style listener ergonomics, not a native DOM EventTarget or a browser-vendor identity API.

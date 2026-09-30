@@ -11,10 +11,10 @@ Small, zero-runtime-dependency browser automation detector with explainable evid
 Install the published GitHub release with npm (no build tools required):
 
 ```sh
-npm install https://github.com/omegdadi/session-driver/releases/download/v0.4.0/omegdadi-session-driver-0.4.0.tgz
+npm install https://github.com/omegdadi/session-driver/releases/download/v0.5.0/omegdadi-session-driver-0.5.0.tgz
 ```
 
-The installed package name is `@omegdadi/session-driver`. Source is tagged `v0.4.0`. npm registry publication is pending: the initial publish was rejected by the registry, so a bare-name registry install is not yet available.
+The installed package name is `@omegdadi/session-driver`. Source is tagged `v0.5.0`. npm registry publication is pending: the initial publish was rejected by the registry, so a bare-name registry install is not yet available.
 
 ```js
 import { detectSession } from '@omegdadi/session-driver';
@@ -198,3 +198,34 @@ v0.3 adds `classifier.wrapWebMCPTool(execute)` to measure actual execution of yo
 `createSessionClassifier({ pointerAnalysis: 'observe' })` adds local pointer diagnostics; use `'classify'` to opt into experimental multi-feature inference. The demo enables this mode and includes a pointer sandbox plus optional labeled-result export. It combines repeated sparse/straight paths with click timing or exact-center targeting; speed alone does not classify a visitor. The real Codex in-app browser was detected from ordinary clicks with no WebMCP invocation or agent declaration. This is a measured example, not validated accuracy on human traffic.
 
 Read [standards research, proposed browser contracts, thresholds, and evaluation plan](./RESEARCH.md) before using this mode for metrics. Raw coordinates are processed transiently and never exported. Default library behavior remains unchanged unless you opt in.
+
+### Live state-change listeners (v0.5)
+
+```js
+import { createSessionMonitor, toAnalyticsProperties } from '@omegdadi/session-driver';
+
+const session = createSessionMonitor({ pointerAnalysis: 'classify' });
+console.log(session.state); // Read the initial state; no synthetic initial event.
+
+const controller = new AbortController();
+session.addEventListener('statechange', event => {
+  console.log(event.previousState, event.state, event.assessment.reasons);
+}, { signal: controller.signal });
+
+session.onassessmentchange = event => {
+  // Includes evidence/confidence changes even if the state stays the same.
+  analytics.track('driver_assessment', toAnalyticsProperties(event.assessment));
+};
+
+// A cooperating Electron/extension host can report start and release immediately:
+// session.setHostState({ agentActive: true });
+// session.setHostState({}); // Clear host evidence; does not assert human identity.
+
+// Teardown:
+// controller.abort(); // Removes just this listener.
+// session.stop();     // Removes all input/listeners/timers and freezes the snapshot.
+```
+
+This follows visibility/connectivity-style ergonomics: a read-only state plus events on changes. It is our library API, not a new property on `navigator` or `document`. States retain `likely_human`, `likely_automated`, `declared_agent`, and `unclassified` rather than implying verified identity. Pointer inference remains optional/experimental; omit `pointerAnalysis` for the default detector.
+
+Read [the event and lifecycle contract](./ANALYTICS.md#live-monitor-contract-v05) for automatic expiry, polling, listener options, and framework cleanup.

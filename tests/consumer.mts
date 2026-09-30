@@ -14,3 +14,9 @@ classifier.stop();
 const pointerClassifier = createSessionClassifier({ pointerAnalysis: 'observe' });
 const speed: number | null = pointerClassifier.refresh().pointer.maxSpeedPxPerMs;
 pointerClassifier.stop();
+
+import { createSessionMonitor } from '@omegdadi/session-driver';
+const monitor = createSessionMonitor({ pollIntervalMs: 0 });
+monitor.addEventListener('statechange', event => { const state: string = event.state; });
+monitor.onassessmentchange = event => { const reason: string[] = event.assessment.reasons; };
+monitor.stop();
