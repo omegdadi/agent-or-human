@@ -23,9 +23,11 @@ test('WebDriver means automation, not necessarily an AI loop', () => {
   const result = detectSession({ scope: browser({ webdriver: true }) });
   assert.equal(result.verdict, 'automated'); assert.equal(result.automated, true); assert.equal(result.agentic, null);
 });
-test('headless UA is weak and spoofable', () => {
+test('user-agent strings are not detection evidence', () => {
   const result = detectSession({ scope: browser({ userAgent: 'Mozilla/5.0 HeadlessChrome/140.0' }) });
-  assert.equal(result.verdict, 'unknown'); assert.equal(result.signals[0].strength, 'weak');
+  assert.equal(result.verdict, 'unknown'); assert.equal(result.signals.length, 0);
+  const navigator = { get userAgent() { throw Error('must not read UA'); } };
+  assert.deepEqual(detectSession({ scope: browser(navigator) }).signals, []);
 });
 test('cooperative agent/human declaration and clearing', () => {
   const scope = browser();

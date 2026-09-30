@@ -1,7 +1,7 @@
 import { type PointerEvidence } from './pointer.cjs';
 export type { PointerEvidence } from './pointer.cjs';
 import { type DetectOptions, type Detection } from './index.cjs';
-export declare const DETECTOR_VERSION = "0.5.0";
+export declare const DETECTOR_VERSION = "0.6.0";
 export type Segment = 'likely_human' | 'likely_automated' | 'declared_agent' | 'unclassified';
 /** Evidence quality, not a calibrated probability of identity. */
 export type SegmentConfidence = 'insufficient' | 'heuristic' | 'strong_signal' | 'declared';
@@ -52,7 +52,7 @@ export declare function toAnalyticsProperties(assessment: SegmentAssessment): {
     session_driver_confidence: SegmentConfidence;
     session_driver_basis: "declaration" | "none" | "behavior" | "browser_signal";
     session_driver_reasons: string[];
-    session_driver_signals: ("declared-agent" | "declared-human" | "webdriver" | "headless-user-agent" | "unreadable-property" | "declaration-conflict" | "debugger-attached" | "agent-ui-indicator" | "invalid-selector" | "host-agent-active" | "webmcp-available" | "webmcp-tool-invoked")[];
+    session_driver_signals: ("declared-agent" | "declared-human" | "webdriver" | "unreadable-property" | "declaration-conflict" | "debugger-attached" | "agent-ui-indicator" | "invalid-selector" | "host-agent-active" | "webmcp-available" | "webmcp-tool-invoked")[];
     session_driver_version: string;
     session_driver_assessed_at: number;
     session_driver_changed_at: number;

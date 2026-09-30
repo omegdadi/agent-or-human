@@ -56,3 +56,9 @@ Adds 11 deterministic classifier tests for passive traffic, varied input, keyboa
 - 45 unit tests and ESM/CJS TypeScript consumers cover state/evidence event distinction, previous/current snapshots, initial reads, deduplication, removal, once, AbortSignal, object listeners, reentrant transitions, consumer isolation, timer expiry, external declarations, lifecycle wake, and stop cleanup.
 - 39 browser demo tests across Chromium, Firefox, and WebKit include native AbortSignal listeners and a real browser interval with an injected clock for evidence expiry. The UI records actual monitor statechange events.
 - Existing classifier.subscribe remains timer-free and compatible. The new monitor is a scoped emitter with browser-style listener ergonomics, not a native DOM EventTarget or a browser-vendor identity API.
+
+## v0.6: Agent or Human and cross-device input
+
+51 unit tests pass, including mouse/touch/pen-only cadence, legacy touch compatibility-event suppression, standalone activation, multi-touch exclusion, and a UA getter that must never be read. TypeScript consumers compile without DOM types. 18 desktop integration checks pass across Chromium, Firefox, and WebKit. 12 input checks pass across those engines plus Pixel 7, iPhone 13, and iPad Pro emulation, using real browser-generated tap/click/keyboard events. These verify counts, modality, cleanup, and no accidental mouse inference on touch. 39 demo tests pass. Packed ESM/CommonJS consumers install and import the new `agent-or-human` name.
+
+Input emulation is not validation on physical Android/iOS hardware, Safari releases, pen hardware, or assistive technologies. The touch/pen/legacy cadence cases use deterministic unit fixtures; no human-versus-agent accuracy rate is claimed. Monitor tests with polling disabled explicitly refresh before reading raw counts, because count-only changes do not emit assessment changes.

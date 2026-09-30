@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",
-    "@omegdadi/session-driver": "file:../../..",
+    "agent-or-human": "file:../../..",
     "expo": "57.0.26",
     "react": "19.2.3",
     "react-dom": "19.2.3",

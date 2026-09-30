@@ -1,7 +1,7 @@
 {
-  "name": "@omegdadi/session-driver",
-  "version": "0.5.0",
-  "description": "Explainable browser automation signals and cooperative session-driver declarations. Zero runtime dependencies.",
+  "name": "agent-or-human",
+  "version": "0.6.0",
+  "description": "Detect AI agent and browser automation signals for analytics and A/B testing. Live state changes, mouse, touch, pen, and keyboard. Zero dependencies.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -17,7 +17,7 @@
         "default": "./dist/index.cjs"
       }
     },
-    "./browser": "./dist/session-driver.global.js",
+    "./browser": "./dist/agent-or-human.global.js",
     "./package.json": "./package.json"
   },
   "files": [
@@ -25,7 +25,8 @@
     "README.md",
     "LICENSE",
     "ANALYTICS.md",
-    "RESEARCH.md"
+    "RESEARCH.md",
+    "PUBLISHING.md"
   ],
   "sideEffects": false,
   "license": "MIT",
@@ -34,15 +35,22 @@
     "url": "git+https://github.com/omegdadi/session-driver.git"
   },
   "bugs": "https://github.com/omegdadi/session-driver/issues",
-  "homepage": "https://github.com/omegdadi/session-driver#readme",
+  "homepage": "https://omegdadi.github.io/session-driver/",
   "keywords": [
-    "automation",
-    "agent",
-    "browser",
+    "ai-agent-detection",
+    "agent-detection",
+    "human-detection",
+    "browser-automation",
+    "bot-detection",
+    "analytics",
+    "ab-testing",
+    "pointer-events",
     "webdriver",
-    "electron",
+    "webmcp",
+    "typescript",
+    "react",
     "expo",
-    "react"
+    "electron"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -54,7 +62,8 @@
     "prepack": "npm run build",
     "test:expo": "npm run build --prefix tests/fixtures/expo && node scripts/test-expo.mjs",
     "build:site": "node scripts/build-site.mjs",
-    "test:site": "playwright test --config playwright.site.config.mjs"
+    "test:site": "playwright test --config playwright.site.config.mjs",
+    "test:inputs": "playwright test --config playwright.inputs.config.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

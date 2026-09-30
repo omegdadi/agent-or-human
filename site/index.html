@@ -2,13 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Session Driver — Human or agent?</title>
-<meta name="description" content="An open-source experiment in browser automation detection. Inspect your session, scroll to reverify, and test the evidence.">
+<title>Agent or Human — AI Agent Detection for Website Analytics</title>
+<meta name="description" content="Open-source AI agent and browser automation detection for analytics and A/B tests. Try live session signals across mouse, touch, pen, and keyboard.">
+<link rel="canonical" href="https://omegdadi.github.io/session-driver/">
+<meta property="og:title" content="Agent or Human — AI Agent Detection">
+<meta property="og:description" content="An open-source JavaScript library for live browser automation signals and analytics segmentation.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://omegdadi.github.io/session-driver/">
 <meta name="theme-color" content="#f5f5ed">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<header class="nav wrap"><a class="brand" href="#top" aria-label="Session Driver home"><span class="brandmark">s/</span> session driver<span class="version">v0.5</span></a><a class="source" href="https://github.com/omegdadi/session-driver" target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a></header>
+<header class="nav wrap"><a class="brand" href="#top" aria-label="Agent or Human home"><span class="brandmark">a/h</span> agent or human<span class="version">v0.6</span></a><a class="source" href="https://github.com/omegdadi/session-driver" target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a></header>
 <main>
 <section class="hero wrap" id="top" aria-labelledby="hero-title">
 <div class="eyebrow"><span class="dot"></span> LIVE ANALYTICS SEGMENT <span class="local">Everything runs on your device</span></div>
@@ -51,7 +56,6 @@
 <div class="lab-controls"><label class="field-label" for="scenario">START WITH A SCENARIO</label><select id="scenario"><option value="ordinary">Ordinary browser · no exposed signals</option><option value="webdriver">WebDriver-controlled browser</option><option value="agent">Cooperative agent</option><option value="human">Self-declared human</option><option value="hidden">Agent with hidden automation</option><option value="debugger">Human with a debugger</option><option value="overlay">In-page agent indicator</option><option value="conflict">Human declaration + WebDriver</option></select>
 <div class="toggles">
 <label><span>WebDriver flag<small>Standard browser automation signal</small></span><input id="lab-webdriver" type="checkbox" role="switch"></label>
-<label><span>Headless user agent<small>Weak, spoofable evidence</small></span><input id="lab-headless" type="checkbox" role="switch"></label>
 <label><span>Debugger attached<small>Provided by a host integration</small></span><input id="lab-debugger" type="checkbox" role="switch"></label>
 <label><span>Agent UI indicator<small>Matching element inside the page</small></span><input id="lab-overlay" type="checkbox" role="switch"></label>
 <label><span>WebMCP available<small>Capability, not active agent control</small></span><input id="lab-webmcp" type="checkbox" role="switch"></label>
@@ -72,6 +76,6 @@
 <div class="honesty"><span aria-hidden="true">ⓘ</span><p><strong>Useful segments, honest limits.</strong> Likely human and behavioral automation labels are unvalidated heuristics, not verified identities or accuracy scores. Passive visitors stay unclassified. Agents can imitate human input, and people can produce automation-like patterns. Validate against labeled traffic before excluding segments from metrics. A declared agent is self-reported. Keep A/B assignment stable, preserve the segment at exposure, and report the unclassified share.</p></div>
 </section>
 </main>
-<footer class="wrap"><a class="brand" href="#top"><span class="brandmark">s/</span> session driver</a><p>Open source. Zero runtime dependencies. MIT licensed.</p><a href="https://github.com/omegdadi/session-driver#readme">Use it in your project ↗</a></footer>
+<footer class="wrap"><a class="brand" href="#top"><span class="brandmark">a/h</span> agent or human</a><p>Open source. Zero runtime dependencies. MIT licensed.</p><a href="https://github.com/omegdadi/session-driver#readme">Use it in your project ↗</a></footer>
 <script type="module" src="./app.js"></script>
 </body></html>

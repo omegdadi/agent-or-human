@@ -1,4 +1,4 @@
-# Session Driver research: behavior, provenance, and browser contracts
+# Agent or Human research: behavior, provenance, and browser contracts
 
 Research snapshot: 2026-09-29. This document distinguishes published standards, drafts, our measurements, and proposals. Nothing here implies W3C endorsement or measured production accuracy.
 
@@ -78,3 +78,9 @@ Our existing `host.agentActive` integration remains a declaration, not attestati
 | Controller handoff | Examine changes in feature distributions alongside explicitly reported control start/stop | Different tasks naturally change behavior; avoid carrying one agent label through an entire human-owned session |
 
 Avoid hidden links, invisible instructions to agents, or intentionally deceptive traps. They measure tool policy and task interpretation more than control provenance. We need representative interactions with independently labeled operators, not a demo optimized to catch the one agent used to write it.
+
+## Cross-device implementation in v0.6
+
+The library follows the W3C Pointer Events model for mouse, touch, and pen, with a legacy touch/mouse fallback selected by capability. Keyboard and standalone high-level click activation are observed separately, as the [Pointer Events introduction](https://www.w3.org/TR/pointerevents3/#intro) recommends for input not covered by pointer streams. Compatibility events are deduplicated. Mouse movement rules remain limited to primary mouse input; no touch speed or pressure threshold is claimed as automation evidence. User-agent parsing has been removed entirely.
+
+This is a library-owned session evidence API, not a polyfill for a standardized human/agent identity API. A standards-shaped event interface can adopt future browser provenance signals without claiming that browsers currently expose universal agent identity. Scope remains browser session control and analytics; general device/browser parsing is outside the package.

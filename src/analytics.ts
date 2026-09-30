@@ -2,7 +2,7 @@ import { createPointerCollector, type PointerEvidence } from './pointer.js';
 export type { PointerEvidence } from './pointer.js';
 import { detectSession, type DetectOptions, type Detection } from './index.js';
 
-export const DETECTOR_VERSION = '0.5.0';
+export const DETECTOR_VERSION = '0.6.0';
 export type Segment = 'likely_human' | 'likely_automated' | 'declared_agent' | 'unclassified';
 /** Evidence quality, not a calibrated probability of identity. */
 export type SegmentConfidence = 'insufficient' | 'heuristic' | 'strong_signal' | 'declared';
@@ -44,8 +44,7 @@ function cadence(samples: Sample[]) {
   const gaps = samples.slice(1).map((sample, i) => sample.time - samples[i].time);
   const mean = gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length;
   const deviation = Math.sqrt(gaps.reduce((sum, gap) => sum + (gap - mean) ** 2, 0) / gaps.length);
-  return { varied: gaps.length >= 4 && mean > 0 && deviation / mean >= 0.25 && Math.max(...gaps) - Math.min(...gaps) >= 150,
-    regular: gaps.length >= 10 && mean > 0 && deviation / mean < 0.1 };
+  return { varied: gaps.length >= 4 && mean > 0 && deviation / mean >= 0.25 && Math.max(...gaps) - Math.min(...gaps) >= 150 };
 }
 /** Opt-in, local-only analytics heuristic. No storage, network, IDs, or experiment allocation. */
 export function createSessionClassifier(options: ClassifierOptions = {}): SessionClassifier {
@@ -89,9 +88,7 @@ export function createSessionClassifier(options: ClassifierOptions = {}): Sessio
       segment = 'likely_automated'; confidence = 'heuristic'; basis = 'browser_signal'; reasons = ['webmcp-tool-invoked'];
     } else if (options.pointerAnalysis === 'classify' && pointerEvidence.automationPattern) {
       segment = 'likely_automated'; confidence = 'heuristic'; basis = 'behavior'; reasons = [...pointerEvidence.reasons];
-    } else if (codes.includes('headless-user-agent') && synthetic.length >= 12 && synthetic.length / samples.length >= 0.9 && synthetic[synthetic.length - 1].time - synthetic[0].time >= 3000 && cadence(synthetic).regular) {
-      segment = 'likely_automated'; confidence = 'heuristic'; basis = 'behavior'; reasons = ['headless-user-agent', 'regular-synthetic-input'];
-    } else if (!(options.pointerAnalysis === 'classify' && pointerEvidence.reasons.length) && !codes.includes('headless-user-agent') && !codes.includes('agent-ui-indicator') && variedCadence && trusted.length / samples.length >= 0.9 && ((trusted.length >= 6 && activeSpanMs >= 3000 && modalities.length >= 2) || (trusted.length >= 10 && activeSpanMs >= 6000))) {
+    } else if (!(options.pointerAnalysis === 'classify' && pointerEvidence.reasons.length) && !codes.includes('agent-ui-indicator') && variedCadence && trusted.length / samples.length >= 0.9 && ((trusted.length >= 6 && activeSpanMs >= 3000 && modalities.length >= 2) || (trusted.length >= 10 && activeSpanMs >= 6000))) {
       segment = 'likely_human'; confidence = 'heuristic'; basis = 'behavior'; reasons = ['varied-trusted-interactions', modalities.length >= 2 ? 'multiple-input-modalities' : 'sustained-single-modality'];
     } else if (detection.verdict === 'human') reasons = ['human-declaration-not-independently-verified'];
     const changed = current !== undefined && (current.segment !== segment || current.confidence !== confidence || current.basis !== basis);
@@ -128,10 +125,24 @@ export function createSessionClassifier(options: ClassifierOptions = {}): Sessio
           removers.push(() => scope.removeEventListener?.(type, listener, true));
         }
       }
-      for (const [type, modality] of [['pointerdown', 'pointer'], ['keydown', 'keyboard'], ['wheel', 'scroll']]) {
-        const listener = (event: { isTrusted: boolean; repeat?: boolean }) => {
+      // Pointer Events unify mouse, touch, and pen. Legacy sources are fallback only.
+      const inputs = [['pointerdown', 'pointer'], ['keydown', 'keyboard'], ['wheel', 'scroll'], ['click', 'activation']];
+      if (!scope.PointerEvent) inputs.push(['touchstart', 'touch'], ['mousedown', 'mouse']);
+      let lastTouch = -Infinity;
+      let lastDirectInput = -Infinity;
+      for (const [type, defaultModality] of inputs) {
+        const listener = (event: { isTrusted: boolean; repeat?: boolean; pointerType?: string; isPrimary?: boolean; detail?: number; touches?: { length: number }; sourceCapabilities?: { firesTouchEvents?: boolean } }) => {
           if (stopped || event.repeat) return;
           const time = now();
+          if (event.isPrimary === false || (type === 'touchstart' && event.touches && event.touches.length !== 1)) return;
+          if (type === 'touchstart' || (type === 'pointerdown' && event.pointerType === 'touch')) lastTouch = time;
+          // Compatibility mouse events after touch are the same gesture, not another modality.
+          if (type === 'mousedown' && (event.sourceCapabilities?.firesTouchEvents || time - lastTouch < 1000)) return;
+          // Standalone high-level activation supports assistive tools. Physical clicks are
+          // already represented by down events; keyboard-generated clicks are deduplicated.
+          if (type === 'click' && (event.detail !== 0 || time - lastDirectInput < 1000)) return;
+          if (type === 'pointerdown' || type === 'touchstart' || type === 'mousedown' || type === 'keydown') lastDirectInput = time;
+          const modality = type === 'pointerdown' && ['mouse', 'touch', 'pen'].includes(event.pointerType ?? '') ? event.pointerType! : defaultModality;
           // Coalesce bursts and duplicate gestures; do not retain targets, keys, or coordinates.
           if (time - lastSample < 150) return;
           lastSample = time;

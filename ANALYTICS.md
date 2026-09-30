@@ -1,11 +1,11 @@
-# Analytics segmentation (experimental, v0.5.0)
+# Analytics segmentation (experimental, v0.6.0)
 
 `createSessionClassifier()` is an opt-in heuristic for understanding website traffic. It adds behavior-based segments to the existing evidence-only `detectSession()` API. It is not an identity check, fraud gate, CAPTCHA, or validated human/agent classifier.
 
 ## Integration
 
 ```js
-import { createSessionClassifier, toAnalyticsProperties } from '@omegdadi/session-driver';
+import { createSessionClassifier, toAnalyticsProperties } from 'agent-or-human';
 
 // Start after consent where your analytics policy requires it.
 const classifier = createSessionClassifier();
@@ -32,20 +32,19 @@ The package never transmits anything. No analytics provider is installed or auto
 | --- | --- | --- |
 | `declared_agent` | `declared` | Page or host explicitly declares an agent. Self-reported, not authenticated. |
 | `likely_automated` | `strong_signal` | `navigator.webdriver === true`. Could be testing/RPA rather than an AI agent. |
-| `likely_automated` | `heuristic` | Headless user agent plus sustained regular synthetic input. |
 | `likely_human` | `heuristic` | Sufficient varied trusted interaction, without conflicting automation signals. |
 | `unclassified` | `insufficient` | Passive, insufficient, contradictory, unsupported, or inconclusive observations. |
 
-Confidence describes the kind of evidence, **not a calibrated probability**. A human declaration alone is not sufficient for `likely_human`. An agent declaration takes priority, followed by exposed automation. Exposed WebDriver cannot be outvoted by human-like activity. Debugger attachment alone does not establish automation. Headless or configured agent-UI evidence prevents the likely-human rule from firing.
+Confidence describes the kind of evidence, **not a calibrated probability**. A human declaration alone is not sufficient for `likely_human`. An agent declaration takes priority, followed by exposed automation. Exposed WebDriver cannot be outvoted by human-like activity. Debugger attachment alone does not establish automation. Configured agent-UI evidence prevents the likely-human rule from firing.
 
 For a two-way dashboard, retain `likely_human` as one group and combine `likely_automated` + `declared_agent` as an automated group, **while keeping unclassified visible as a third bucket**. Do not silently impute unclassified traffic as human, or label all automation as AI agents. Break down automated traffic by confidence/basis when useful.
 
 ## Current rules (not empirically calibrated)
 
-With pointer analysis off (the default), only `pointerdown`, `keydown`, and `wheel` events are observed. Pointer input includes touch on Pointer Events browsers. Held-key repeats are ignored. Events less than 150 ms after the last accepted event are coalesced. Click and pointerdown are not both counted for the same gesture. At most 32 samples from the last 30 seconds remain in memory.
+With pointer analysis off (the default), `pointerdown`, `keydown`, `wheel`, and standalone zero-detail `click` activations are observed. Pointer types distinguish mouse, touch, and pen. Browsers without Pointer Events additionally use `touchstart` and `mousedown`; compatibility mouse events following touch are suppressed. Secondary contacts and multi-touch starts are ignored. Zero-detail activations within one second of direct input are conservatively suppressed to avoid counting keyboard clicks twice. Held-key repeats are ignored. Events less than 150 ms after the last accepted event are coalesced. Click and pointerdown are not both counted for the same gesture. At most 32 samples from the last 30 seconds remain in memory.
 
 - **Likely human:** at least 90% accepted samples are trusted; their inter-event gaps have coefficient of variation >= 0.25 and a range >= 150 ms. Require 6 trusted events spanning at least 3 seconds across 2 input types, OR 10 trusted events spanning at least 6 seconds in one input type. This permits keyboard-only/touch-only input without requiring a mouse. Time spent idle cannot satisfy the activity span.
-- **Behavioral likely automated:** a HeadlessChrome user agent plus at least 12 synthetic events over 3 seconds, >=90% synthetic input, with gap coefficient of variation <0.1. Synthetic events alone do not suffice: legitimate applications generate them.
+- **No UA parsing:** user-agent strings are never read or scored. Synthetic events alone do not establish automation: legitimate applications generate them.
 - **Unclassified:** everything else, including passive readers and unsupported environments. A previously inferred segment may expire on the next input/refresh once evidence leaves the rolling window.
 
 These thresholds are transparent initial rules, not a trained model or accuracy claim. Input restrictions, assistive tools, repetitive tasks, and different hardware can affect coverage. An automated browser with hidden flags and human-like timing can be assigned `likely_human`; tests deliberately demonstrate this limitation. A false positive/negative rate has not been measured on real labeled traffic.

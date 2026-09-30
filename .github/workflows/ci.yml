@@ -19,6 +19,7 @@ jobs:
       - run: git diff --exit-code -- dist
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run test:browser
+      - run: npm run test:inputs
       - run: npm run test:package
   electron:
     runs-on: macos-latest

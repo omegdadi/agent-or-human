@@ -1,4 +1,6 @@
-# session-driver
+# Agent or Human
+
+AI agent and browser automation detection for website analytics and A/B tests.
 
 **[Try the live demo →](https://omegdadi.github.io/session-driver/)** · [Demo deployment](https://github.com/omegdadi/session-driver/actions/workflows/pages.yml)
 
@@ -11,13 +13,13 @@ Small, zero-runtime-dependency browser automation detector with explainable evid
 Install the published GitHub release with npm (no build tools required):
 
 ```sh
-npm install https://github.com/omegdadi/session-driver/releases/download/v0.5.0/omegdadi-session-driver-0.5.0.tgz
+npm install https://github.com/omegdadi/session-driver/releases/download/v0.6.0/agent-or-human-0.6.0.tgz
 ```
 
-The installed package name is `@omegdadi/session-driver`. Source is tagged `v0.5.0`. npm registry publication is pending: the initial publish was rejected by the registry, so a bare-name registry install is not yet available.
+The installed package name is `agent-or-human`. npm registry publication is pending; the GitHub release is the installable distribution. See [PUBLISHING.md](./PUBLISHING.md) for the registry release process. The existing repository and demo URLs remain stable.
 
 ```js
-import { detectSession } from '@omegdadi/session-driver';
+import { detectSession } from 'agent-or-human';
 
 const session = detectSession();
 console.log(session.verdict, session.signals);
@@ -28,7 +30,7 @@ console.log(session.verdict, session.signals);
 ## Analytics and A/B segments (v0.2)
 
 ```js
-import { createSessionClassifier, toAnalyticsProperties } from '@omegdadi/session-driver';
+import { createSessionClassifier, toAnalyticsProperties } from 'agent-or-human';
 const classifier = createSessionClassifier();
 const initial = toAnalyticsProperties(classifier.getSnapshot());
 classifier.subscribe(assessment => {
@@ -64,7 +66,6 @@ Checked against vendor documentation on 2026-09-29. There is no universal page A
 | Signal | Treatment |
 | --- | --- |
 | Standard `navigator.webdriver` | Strong automation evidence; not agent identity. |
-| HeadlessChrome user agent | Weak, spoofable signal; does not determine verdict. |
 | Known in-page agent overlay | Optional CSS selector match; weak and spoofable, even when present. Hidden elements also match. |
 | Chrome extension debugger state | Host bridge required; attachment is weak evidence because human developers attach debuggers too. |
 | Electron `webContents.debugger.isAttached()` | Host bridge required; describes this debugger API's attachment, not all remote automation. |
@@ -92,7 +93,7 @@ Sources: [W3C WebDriver](https://www.w3.org/TR/webdriver/#interface), [MDN webdr
 ## Cooperative handoffs
 
 ```js
-import { declareSessionDriver, detectSession } from '@omegdadi/session-driver';
+import { declareSessionDriver, detectSession } from 'agent-or-human';
 declareSessionDriver('agent'); // true on success, false outside a writable browser
 console.log(detectSession().verdict); // agent
 
@@ -105,7 +106,7 @@ This writes `window.__SESSION_DRIVER__`. An agent controller may set the same pr
 ## Observe input (optional)
 
 ```js
-import { observeSession } from '@omegdadi/session-driver';
+import { observeSession } from 'agent-or-human';
 const observer = observeSession();
 const unsubscribe = observer.subscribe(snapshot => console.log(snapshot));
 console.log(observer.getSnapshot());
@@ -122,7 +123,7 @@ Use the same core from any framework. No React dependency or hook adapter is req
 
 ```jsx
 import { useEffect, useState } from 'react';
-import { observeSession } from '@omegdadi/session-driver';
+import { observeSession } from 'agent-or-human';
 
 export function SessionStatus() {
   const [session, setSession] = useState(null);
@@ -141,14 +142,14 @@ In Next.js, put this component in a `'use client'` module. Initialize after moun
 CommonJS:
 
 ```js
-const { detectSession } = require('@omegdadi/session-driver');
+const { detectSession } = require('agent-or-human');
 ```
 
 Plain HTML (copy the distributed file to your site's assets):
 
 ```html
-<script src="/assets/session-driver.global.js"></script>
-<script>console.log(SessionDriver.detectSession());</script>
+<script src="/assets/agent-or-human.global.js"></script>
+<script>console.log(AgentOrHuman.detectSession());</script>
 ```
 
 `examples/index.html` is a runnable demo. Open it after cloning; no server is required.
@@ -202,7 +203,7 @@ Read [standards research, proposed browser contracts, thresholds, and evaluation
 ### Live state-change listeners (v0.5)
 
 ```js
-import { createSessionMonitor, toAnalyticsProperties } from '@omegdadi/session-driver';
+import { createSessionMonitor, toAnalyticsProperties } from 'agent-or-human';
 
 const session = createSessionMonitor({ pointerAnalysis: 'classify' });
 console.log(session.state); // Read the initial state; no synthetic initial event.
@@ -229,3 +230,12 @@ session.onassessmentchange = event => {
 This follows visibility/connectivity-style ergonomics: a read-only state plus events on changes. It is our library API, not a new property on `navigator` or `document`. States retain `likely_human`, `likely_automated`, `declared_agent`, and `unclassified` rather than implying verified identity. Pointer inference remains optional/experimental; omit `pointerAnalysis` for the default detector.
 
 Read [the event and lifecycle contract](./ANALYTICS.md#live-monitor-contract-v05) for automatic expiry, polling, listener options, and framework cleanup.
+
+
+## Cross-device input (v0.6)
+
+The core uses browser capabilities and observed evidence, never user-agent parsing. Mouse, touch, and pen use Pointer Events; older browsers fall back to touch/mouse events. Keyboard and standalone assistive click activation have their own paths. Compatibility events are deduplicated. Mouse movement heuristics never run on touch or pen. Missing evidence stays unclassified.
+
+Chromium, Firefox, and WebKit are tested, with additional Android phone, iPhone, and iPad emulation. Emulation verifies event handling and layout, not physical-device accuracy. Native Expo/React Native has no browser session and returns unsupported; Expo web and Electron renderers use the browser API.
+
+Existing API names, `__SESSION_DRIVER__` declarations, and `session_driver_*` analytics keys are preserved for integrations. The standalone script is now `agent-or-human.global.js`, exposing `AgentOrHuman`.

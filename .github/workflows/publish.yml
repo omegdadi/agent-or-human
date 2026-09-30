@@ -1,0 +1,39 @@
+name: Publish npm package
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to publish (e.g. v0.6.0)
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - name: Check tag matches package version
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: node --input-type=module -e 'import p from "./package.json" with {type:"json"}; if(process.env.RELEASE_TAG !== `v${p.version}` || p.name !== "agent-or-human") throw Error("Tag/package mismatch")'
+      - run: npm ci
+      - run: npm test
+      - run: git diff --exit-code -- dist
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run test:browser
+      - run: npm run test:inputs
+      - run: npm run test:package
+      - run: npm run build:site
+      - run: npm run test:site
+      - run: npm publish --access public --provenance

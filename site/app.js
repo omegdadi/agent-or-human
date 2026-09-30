@@ -47,7 +47,6 @@ const describe = result => ({
 }[result.verdict]);
 const signalInfo = [
   ['webdriver', 'WebDriver', 'STRONG', 'A browser-provided flag for automation. It cannot distinguish an AI agent from a test runner.', 'Not exposed'],
-  ['headless-user-agent', 'Headless browser', 'WEAK', 'A headless user-agent string is easy to change. It is supporting evidence only.', 'Not observed'],
   ['debugger-attached', 'Browser control bridge', 'WEAK', 'Requires an Electron or extension integration. Websites cannot read browser-owned control banners.', 'Not connected'],
   ['agent-ui-indicator', 'Agent UI indicator', 'WEAK', 'Requires a known in-page selector. No vendor-specific overlay is configured in this demo.', 'Not configured'],
   ['webmcp-tool-invoked', 'Recent tool execution', 'HEURISTIC', 'An instrumented WebMCP callback ran within 30 seconds. Tool use is observable; the caller’s identity is not verified.', 'Not observed'],
@@ -106,7 +105,7 @@ const checkpointObserver = new IntersectionObserver(entries => {
   }
 }, { threshold: 0.5 });
 checkpointObserver.observe($('checkpoint'));
-const flags = ['webdriver', 'headless', 'debugger', 'overlay', 'webmcp', 'host'];
+const flags = ['webdriver', 'debugger', 'overlay', 'webmcp', 'host'];
 const scenarios = {
   ordinary: { note: 'An ordinary browser with no exposed signals is unknown, not a verified human.' },
   webdriver: { webdriver: true, note: 'Exposed browser control is detected automatically. It does not prove that an AI is behind it.' },
@@ -123,7 +122,7 @@ function renderLab() {
   const result = detectSession({
     scope: {
       document: { modelContext: enabled.webmcp ? {} : undefined, querySelector: () => enabled.overlay ? {} : null },
-      navigator: { webdriver: enabled.webdriver, userAgent: enabled.headless ? 'HeadlessChrome/153.0' : 'DemoBrowser/1.0' },
+      navigator: { webdriver: enabled.webdriver },
       __SESSION_DRIVER__: declaration || undefined,
     },
     host: { debuggerAttached: enabled.debugger, agentActive: enabled.host },
@@ -146,9 +145,9 @@ for (const id of [...flags.map(flag => `lab-${flag}`), 'lab-declaration']) $(id)
   renderLab();
 });
 $('download').addEventListener('click', () => {
-  const data = { library: '@omegdadi/session-driver', version: DETECTOR_VERSION, exportedAt: new Date().toISOString(), currentAssessment: monitor.refresh(), checks, scrollCheckpoints: checkpoints, interactions: observer.getSnapshot().interactions, history, segmentTransitions: transitions, experimentEvents, stateEvents, validationContext: { driver: $('validation-driver').value, inputMethod: $('validation-input').value, source: 'self-reported-not-used-by-classifier' } };
+  const data = { library: 'agent-or-human', version: DETECTOR_VERSION, exportedAt: new Date().toISOString(), currentAssessment: monitor.refresh(), checks, scrollCheckpoints: checkpoints, interactions: observer.getSnapshot().interactions, history, segmentTransitions: transitions, experimentEvents, stateEvents, validationContext: { driver: $('validation-driver').value, inputMethod: $('validation-input').value, source: 'self-reported-not-used-by-classifier' } };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-  const link = document.createElement('a'); link.href = url; link.download = 'session-driver-results.json'; link.click();
+  const link = document.createElement('a'); link.href = url; link.download = 'agent-or-human-results.json'; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 function renderExperiment() { $('experiment-result').textContent = experimentEvents.length ? JSON.stringify(experimentEvents, null, 2) : 'No example events recorded. Nothing is sent to a server.'; }

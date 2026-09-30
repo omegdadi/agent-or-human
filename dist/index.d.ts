@@ -2,7 +2,7 @@
 export type Driver = 'agent' | 'human';
 export type Verdict = Driver | 'automated' | 'unknown' | 'unsupported';
 export interface Signal {
-    code: 'declared-agent' | 'declared-human' | 'webdriver' | 'headless-user-agent' | 'unreadable-property' | 'declaration-conflict' | 'debugger-attached' | 'agent-ui-indicator' | 'invalid-selector' | 'host-agent-active' | 'webmcp-available' | 'webmcp-tool-invoked';
+    code: 'declared-agent' | 'declared-human' | 'webdriver' | 'unreadable-property' | 'declaration-conflict' | 'debugger-attached' | 'agent-ui-indicator' | 'invalid-selector' | 'host-agent-active' | 'webmcp-available' | 'webmcp-tool-invoked';
     strength: 'declaration' | 'strong' | 'weak' | 'diagnostic';
 }
 export interface Detection {
@@ -17,6 +17,7 @@ export interface Detection {
 /** Minimal structural interface: no DOM types required in consumer applications. */
 export interface BrowserScope {
     document?: unknown;
+    PointerEvent?: unknown;
     navigator?: {
         webdriver?: unknown;
         userAgent?: unknown;

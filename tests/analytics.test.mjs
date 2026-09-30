@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createSessionClassifier, toAnalyticsProperties, DETECTOR_VERSION } from '../dist/index.js';
-function fixture(navigator = {}) {
+function fixture(navigator = {}, pointerEvents = true) {
   let time = 1000; const listeners = new Map();
-  const scope = { document: {}, navigator, addEventListener: (type, cb) => listeners.set(type, cb), removeEventListener: type => listeners.delete(type) };
+  const scope = { document: {}, navigator, PointerEvent: pointerEvents ? function() {} : undefined, addEventListener: (type, cb) => listeners.set(type, cb), removeEventListener: type => listeners.delete(type) };
   const classifier = createSessionClassifier({ scope, now: () => time });
-  return { classifier, scope, listeners, advance(ms) { time += ms; }, event(type, ms = 500, trusted = true, repeat = false) { time += ms; listeners.get(type)?.({ isTrusted: trusted, repeat }); } };
+  return { classifier, scope, listeners, advance(ms) { time += ms; }, event(type, ms = 500, trusted = true, repeat = false, props = {}) { time += ms; listeners.get(type)?.({ isTrusted: trusted, repeat, ...props }); } };
 }
 function human(f) { for (const [i, gap] of [0, 250, 700, 350, 1400, 800].entries()) f.event(i % 2 ? 'wheel' : 'pointerdown', gap); }
 test('passive visits and waiting never become human', () => {
@@ -26,10 +26,10 @@ test('keyboard-only input can qualify; repeated held keys cannot', () => {
 test('regular trusted clicks alone and synthetic bursts do not establish human', () => {
   for (const trusted of [true, false]) { const f = fixture(); for (let i = 0; i < 15; i++) f.event('pointerdown', 600, trusted); assert.equal(f.classifier.getSnapshot().segment, 'unclassified'); }
 });
-test('behavioral automation needs headless evidence and a sustained regular synthetic pattern', () => {
+test('UA strings and regular synthetic input do not establish automation', () => {
   const f = fixture({ userAgent: 'HeadlessChrome/153.0' });
   for (let i = 0; i < 12; i++) f.event('pointerdown', 400, false);
-  assert.equal(f.classifier.getSnapshot().segment, 'likely_automated'); assert.equal(f.classifier.getSnapshot().confidence, 'heuristic');
+  assert.equal(f.classifier.getSnapshot().segment, 'unclassified');
 });
 test('automation signals override human-like behavior; declarations win over automation', () => {
   const f = fixture({ webdriver: true }); human(f);
@@ -97,4 +97,39 @@ test('tool wrapper preserves results and failures and respects browser/declarati
   assert.equal(f.classifier.refresh().segment, 'declared_agent');
   const native = createSessionClassifier({ scope: null }); native.wrapWebMCPTool(() => {})();
   assert.equal(native.getSnapshot().segment, 'unclassified'); native.stop();
+});
+
+const variedGaps = [200,300,1000,400,1500,600,1400,300,1200,500];
+for (const pointerType of ['mouse', 'touch', 'pen']) test(`${pointerType} only activity works without a UA or wheel`, () => {
+  const f = fixture();
+  for (const gap of variedGaps) f.event('pointerdown', gap, true, false, { pointerType, isPrimary: true });
+  assert.equal(f.classifier.getSnapshot().segment, 'likely_human');
+  assert.deepEqual(f.classifier.getSnapshot().behavior.modalities, [pointerType]);
+});
+test('legacy touch and compatibility mouse/click count as one input, not three', () => {
+  const f = fixture({}, false);
+  for (const gap of variedGaps) {
+    f.event('touchstart', gap, true, false, { touches: { length: 1 } });
+    f.event('mousedown', 200, true, false, { sourceCapabilities: { firesTouchEvents: true } });
+    f.event('click', 0, true, false, { detail: 1 });
+  }
+  const snapshot = f.classifier.getSnapshot();
+  assert.equal(snapshot.behavior.trustedEvents, 10);
+  assert.deepEqual(snapshot.behavior.modalities, ['touch']);
+  assert.equal(snapshot.segment, 'likely_human');
+});
+test('standalone accessible activation is accepted but keyboard clicks and long presses are not double counted', () => {
+  const f = fixture();
+  for (const gap of variedGaps) f.event('click', gap, true, false, { detail: 0 });
+  assert.equal(f.classifier.getSnapshot().segment, 'likely_human');
+  const k = fixture();
+  k.event('keydown'); k.event('click', 200, true, false, { detail: 0 });
+  k.event('pointerdown', 2000); k.event('click', 2000, true, false, { detail: 1 });
+  assert.equal(k.classifier.getSnapshot().behavior.trustedEvents, 2);
+});
+test('secondary contacts and multitouch starts do not inflate samples', () => {
+  const f = fixture({}, false);
+  f.event('pointerdown', 500, true, false, { pointerType: 'touch', isPrimary: false });
+  f.event('touchstart', 500, true, false, { touches: { length: 2 } });
+  assert.equal(f.classifier.getSnapshot().behavior.trustedEvents, 0);
 });

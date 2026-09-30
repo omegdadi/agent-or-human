@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Session Driver demo</title>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Agent or Human demo</title>
 <style>body{font:17px system-ui;max-width:760px;margin:60px auto;padding:20px;color:#162632;background:#f2f5f7}button{padding:12px;margin:4px}pre{background:white;padding:24px;overflow:auto;border-radius:12px}</style>
 <h1>Who is driving this page?</h1><p>Automation evidence is observable. Human identity and AI reasoning cannot be proven by a web page.</p>
 <button id="refresh">Refresh detection</button><button id="agent">Declare agent</button><button id="human">Declare human</button><button id="clear">Clear declaration</button>
 <p>Declarations below are cooperative metadata, not verified identity. Input counts do not establish who is driving.</p><pre id="result" aria-live="polite"></pre>
-<script src="../dist/session-driver.global.js"></script><script>
-const observer = SessionDriver.observeSession();
+<script src="../dist/agent-or-human.global.js"></script><script>
+const observer = AgentOrHuman.observeSession();
 function render(){document.getElementById('result').textContent=JSON.stringify(observer.getSnapshot(),null,2)}
 observer.subscribe(render);
-for(const [id,value] of [['agent','agent'],['human','human'],['clear',null]])document.getElementById(id).onclick=()=>{SessionDriver.declareSessionDriver(value);render()};
+for(const [id,value] of [['agent','agent'],['human','human'],['clear',null]])document.getElementById(id).onclick=()=>{AgentOrHuman.declareSessionDriver(value);render()};
 document.getElementById('refresh').onclick=render;render();
 window.addEventListener('pagehide',()=>observer.stop(),{once:true});
 </script></html>

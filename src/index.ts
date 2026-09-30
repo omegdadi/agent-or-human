@@ -2,7 +2,7 @@
 export type Driver = 'agent' | 'human';
 export type Verdict = Driver | 'automated' | 'unknown' | 'unsupported';
 export interface Signal {
-  code: 'declared-agent' | 'declared-human' | 'webdriver' | 'headless-user-agent' | 'unreadable-property' | 'declaration-conflict' | 'debugger-attached' | 'agent-ui-indicator' | 'invalid-selector' | 'host-agent-active' | 'webmcp-available' | 'webmcp-tool-invoked';
+  code: 'declared-agent' | 'declared-human' | 'webdriver' | 'unreadable-property' | 'declaration-conflict' | 'debugger-attached' | 'agent-ui-indicator' | 'invalid-selector' | 'host-agent-active' | 'webmcp-available' | 'webmcp-tool-invoked';
   strength: 'declaration' | 'strong' | 'weak' | 'diagnostic';
 }
 export interface Detection {
@@ -17,6 +17,7 @@ export interface Detection {
 /** Minimal structural interface: no DOM types required in consumer applications. */
 export interface BrowserScope {
   document?: unknown;
+  PointerEvent?: unknown;
   navigator?: { webdriver?: unknown; userAgent?: unknown; modelContext?: unknown };
   __SESSION_DRIVER__?: unknown;
   addEventListener?: (type: string, listener: (event: { isTrusted: boolean }) => void, options?: boolean) => void;
@@ -62,12 +63,8 @@ export function detectSession(options: DetectOptions = {}): Detection {
     } catch { signals.push({ code: 'invalid-selector', strength: 'diagnostic' }); }
   }
   const webdriver = read(navigator, 'webdriver', signals) === true;
-  const userAgent = read(navigator, 'userAgent', signals);
   const declaration = read(scope, '__SESSION_DRIVER__', signals);
   if (webdriver) signals.push({ code: 'webdriver', strength: 'strong' });
-  if (typeof userAgent === 'string' && /\bHeadlessChrome\//i.test(userAgent)) {
-    signals.push({ code: 'headless-user-agent', strength: 'weak' });
-  }
   if (options.host?.agentActive === true) {
     signals.push({ code: 'host-agent-active', strength: 'declaration' });
     if (declaration === 'human') signals.push({ code: 'declaration-conflict', strength: 'diagnostic' });

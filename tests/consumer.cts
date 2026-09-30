@@ -1,4 +1,4 @@
-import driver = require('@omegdadi/session-driver');
+import driver = require('agent-or-human');
 const result: driver.Detection = driver.detectSession();
 
 const classifier = driver.createSessionClassifier();
