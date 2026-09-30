@@ -9,7 +9,7 @@ let exposure = null;
 const describeSegment = assessment => ({
   unclassified: ['UNCLASSIFIED', 'Insufficient evidence', 'Browse naturally: click or tap, scroll, or use your keyboard. Varied activity over several seconds can support a likely-human assessment. Passive visits remain unclassified.'],
   likely_human: ['LIKELY HUMAN', 'Behavioral heuristic · not verified identity', 'Your recent interaction pattern is compatible with human browsing. This is an unvalidated heuristic; an agent imitating that pattern can receive the same segment.'],
-  likely_automated: ['LIKELY AUTOMATED', assessment.confidence === 'strong_signal' ? 'Strong browser signal · not agent identity' : 'Behavioral heuristic · not verified identity', 'Automation evidence is present. This may be an AI agent, a test runner, or another automated system. See the supporting reasons below.'],
+  likely_automated: assessment.reasons.includes('webmcp-tool-invoked') ? ['AGENT TOOL USED', 'Observed tool execution · heuristic segment', 'A WebMCP tool ran in this page within the last 30 seconds. This supports the likely-automated analytics segment, but page scripts and developer tools can invoke it too. It does not prove who controls every action.'] : ['LIKELY AUTOMATED', assessment.confidence === 'strong_signal' ? 'Strong browser signal · not agent identity' : 'Behavioral heuristic · not verified identity', 'Automation evidence is present. This may be an AI agent, a test runner, or another automated system. See the supporting reasons below.'],
   declared_agent: ['DECLARED AGENT', 'Explicit declaration · not verified identity', 'The page or host explicitly identifies an agent. This remains cooperative metadata, separate from inferred automation.'],
 }[assessment.segment]);
 function renderAssessment(assessment) {
@@ -41,6 +41,7 @@ const signalInfo = [
   ['headless-user-agent', 'Headless browser', 'WEAK', 'A headless user-agent string is easy to change. It is supporting evidence only.', 'Not observed'],
   ['debugger-attached', 'Browser control bridge', 'WEAK', 'Requires an Electron or extension integration. Websites cannot read browser-owned control banners.', 'Not connected'],
   ['agent-ui-indicator', 'Agent UI indicator', 'WEAK', 'Requires a known in-page selector. No vendor-specific overlay is configured in this demo.', 'Not configured'],
+  ['webmcp-tool-invoked', 'Recent tool execution', 'HEURISTIC', 'An instrumented WebMCP callback ran within 30 seconds. Tool use is observable; the caller’s identity is not verified.', 'Not observed'],
   ['webmcp-available', 'WebMCP capability', 'DIAGNOSTIC', 'A tool-capable browser does not mean an agent is currently using it.', 'Not observed'],
   ['declaration', 'Driver declaration', 'COOPERATIVE', 'An explicit page or host declaration. Any page script can set it; it is not identity verification.', 'None'],
 ];
@@ -162,3 +163,27 @@ transitions.push(toAnalyticsProperties(classifier.getSnapshot()));
 renderExperiment();
 $('scenario-note').textContent = scenarios.ordinary.note;
 renderLab();
+
+// Register a real page action. Merely registering/discovering it never changes the segment.
+async function registerReverifyTool() {
+  try {
+    const context = document.modelContext ?? navigator.modelContext;
+    if (!context?.registerTool) {
+      $('tool-status').textContent = 'WebMCP is unavailable here. Ordinary browser checks still work.';
+      return;
+    }
+    await context.registerTool({
+      name: 'reverify_session',
+      description: 'Reverify this page’s session and return its analytics evidence. Invoking this tool records recent WebMCP tool use in the local classifier; it does not declare or authenticate an agent. No data is sent to a server.',
+      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+      execute: classifier.wrapWebMCPTool(() => {
+        verify('WebMCP tool');
+        return { content: [{ type: 'text', text: JSON.stringify(toAnalyticsProperties(classifier.getSnapshot())) }] };
+      }),
+    });
+    $('tool-status').textContent = 'Ready: a browser agent can call reverify_session. Availability alone does not change your segment.';
+  } catch {
+    $('tool-status').textContent = 'This browser could not register the WebMCP tool. Ordinary browser checks still work.';
+  }
+}
+registerReverifyTool();

@@ -36,3 +36,10 @@ The interactive demo adds 21 browser checks (7 scenarios on each of Chromium, Fi
 ## v0.2 analytics verification
 
 Adds 11 deterministic classifier tests for passive traffic, varied input, keyboard-only use, held-key repeats, regular/synthetic input, headless corroboration, signal precedence, declarations, transition notifications, evidence expiry, snapshot isolation, bounded sampling, cleanup, SSR, and serializable analytics properties. The public demo suite adds a real trusted-input journey in each browser engine, demonstrating development of a likely-human segment and stable exposure/conversion variant. This journey deliberately hides automation flags, so it also establishes a known false-negative limitation: a suitably behaving agent can look human. These are functional tests, not a human/agent accuracy benchmark.
+
+## v0.3 WebMCP verification
+
+- 26 unit tests and TypeScript consumers pass, including invocation-only evidence, expiry, stop, failed callbacks, promises, and precedence.
+- 27 demo tests pass across Chromium, Firefox, and WebKit. The new regression test mocks registration and invokes the captured callback; it is not a claim of native WebMCP support in all engines.
+- Separately tested native WebMCP in Codex's in-app browser: `webdriver` false, normal Chrome/154 user agent, `document.modelContext` present. Initial load remained unclassified. The browser's WebMCP capability discovered `reverify_session`; invoking it changed the actual page to AGENT TOOL USED with `likely_automated`, `heuristic`, and `webmcp-tool-invoked`. No page declaration was injected.
+- This confirms instrumented tool-channel measurement. It does not demonstrate passive detection of screenshot/click-only agent control or verified caller identity.

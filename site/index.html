@@ -8,7 +8,7 @@
 <link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<header class="nav wrap"><a class="brand" href="#top" aria-label="Session Driver home"><span class="brandmark">s/</span> session driver<span class="version">v0.2</span></a><a class="source" href="https://github.com/omegdadi/session-driver" target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a></header>
+<header class="nav wrap"><a class="brand" href="#top" aria-label="Session Driver home"><span class="brandmark">s/</span> session driver<span class="version">v0.3</span></a><a class="source" href="https://github.com/omegdadi/session-driver" target="_blank" rel="noreferrer">View on GitHub <span aria-hidden="true">↗</span></a></header>
 <main>
 <section class="hero wrap" id="top" aria-labelledby="hero-title">
 <div class="eyebrow"><span class="dot"></span> LIVE ANALYTICS SEGMENT <span class="local">Everything runs on your device</span></div>
@@ -21,6 +21,7 @@
 </div>
 <div class="hero-actions"><button class="primary" id="reverify">Reverify session <span aria-hidden="true">↻</span></button><span id="last-check">Waiting for first check</span><a class="scroll-link" href="#checkpoint">Scroll down to reverify <span aria-hidden="true">↓</span></a></div>
 <div class="behavior-panel"><strong>How the assessment develops</strong><p>Use the page naturally. Several clicks/taps and scrolls over time can support “likely human.” Keyboard-only and touch-only activity can also qualify with more evidence.</p><p id="behavior-progress" role="status"></p><p id="segment-reasons"></p></div>
+<div class="behavior-panel"><strong>Measure browser-agent tool use</strong><p id="tool-status" role="status">Checking WebMCP support…</p><p>Ask your browser agent to reverify this session using the page’s WebMCP tool. The resulting “AGENT TOOL USED” label reports recent tool execution, not passive agent detection. An agent using only clicks or screenshots may remain unclassified. Reverify after 30 seconds of no tool use to expire this evidence.</p></div>
 <noscript><p class="notice">Enable JavaScript to run this browser experiment. No detection has taken place.</p></noscript>
 <div class="metrics" aria-label="Session measurements"><div><span id="check-count">0</span><small>VERIFICATION RUNS</small></div><div><span id="trusted-count">0</span><small>TRUSTED INPUT EVENTS</small></div><div><span id="synthetic-count">0</span><small>SYNTHETIC INPUT EVENTS</small></div><div><span id="scroll-count">0</span><small>SCROLL CHECKPOINTS</small></div></div>
 <p class="footnote">Trusted events can come from automation, too. The classifier uses a bounded 30-second activity window; these totals count raw input. Confidence describes evidence quality, not a probability.</p>

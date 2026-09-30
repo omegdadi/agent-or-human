@@ -1,5 +1,5 @@
 import { type DetectOptions, type Detection } from './index.js';
-export declare const DETECTOR_VERSION = "0.2.0";
+export declare const DETECTOR_VERSION = "0.3.0";
 export type Segment = 'likely_human' | 'likely_automated' | 'declared_agent' | 'unclassified';
 /** Evidence quality, not a calibrated probability of identity. */
 export type SegmentConfidence = 'insufficient' | 'heuristic' | 'strong_signal' | 'declared';
@@ -33,6 +33,9 @@ export interface SessionClassifier {
     refresh(): SegmentAssessment;
     /** Emits only when segment, confidence, or basis changes. No automatic initial event. */
     subscribe(listener: (assessment: SegmentAssessment) => void): () => void;
+    /** Wrap only a WebMCP tool's execute callback. Records recent tool use, not agent identity.
+     * Page scripts can also invoke tools; this is heuristic evidence. No arguments/results are retained. */
+    wrapWebMCPTool<Args extends unknown[], Result>(execute: (...args: Args) => Result): (...args: Args) => Result;
     /** Freeze the last assessment and remove listeners. Idempotent. */
     stop(): void;
 }
@@ -44,7 +47,7 @@ export declare function toAnalyticsProperties(assessment: SegmentAssessment): {
     session_driver_confidence: SegmentConfidence;
     session_driver_basis: "declaration" | "none" | "behavior" | "browser_signal";
     session_driver_reasons: string[];
-    session_driver_signals: ("declared-agent" | "declared-human" | "webdriver" | "headless-user-agent" | "unreadable-property" | "declaration-conflict" | "debugger-attached" | "agent-ui-indicator" | "invalid-selector" | "host-agent-active" | "webmcp-available")[];
+    session_driver_signals: ("declared-agent" | "declared-human" | "webdriver" | "headless-user-agent" | "unreadable-property" | "declaration-conflict" | "debugger-attached" | "agent-ui-indicator" | "invalid-selector" | "host-agent-active" | "webmcp-available" | "webmcp-tool-invoked")[];
     session_driver_version: string;
     session_driver_assessed_at: number;
     session_driver_changed_at: number;

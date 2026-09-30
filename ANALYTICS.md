@@ -1,4 +1,4 @@
-# Analytics segmentation (experimental, v0.2.0)
+# Analytics segmentation (experimental, v0.3.0)
 
 `createSessionClassifier()` is an opt-in heuristic for understanding website traffic. It adds behavior-based segments to the existing evidence-only `detectSession()` API. It is not an identity check, fraud gate, CAPTCHA, or validated human/agent classifier.
 
@@ -92,3 +92,32 @@ Behavior samples retain only event family, trust flag, and timing in bounded mem
 3. Report a confusion matrix and the unclassified/unsupported share, split by browser, input type, rule version, and experiment variant.
 4. Include concealed automation and human-like agent behavior; do not report test-runner detection as agent-identification accuracy.
 5. Start in observation mode. Validate and freeze any rule changes before using segments to exclude traffic or make experiment decisions.
+
+## Measuring actual WebMCP tool use (v0.3)
+
+The Codex in-app browser can expose `webdriver: false` and an ordinary Chrome user agent. Passive inspection cannot reliably distinguish its human and agent control. WebMCP availability also does not identify an active agent.
+
+Instrument the execution callback of your site's real WebMCP tools:
+
+```js
+const classifier = createSessionClassifier();
+const context = document.modelContext ?? navigator.modelContext;
+if (context?.registerTool) {
+  await context.registerTool({
+    name: 'get_product_summary',
+    description: 'Read the currently displayed product summary.',
+    inputSchema: { type: 'object', properties: {} },
+    execute: classifier.wrapWebMCPTool(() => ({
+      content: [{ type: 'text', text: document.querySelector('#summary').textContent }]
+    }))
+  });
+}
+```
+
+Wrap only the tool callback, not an ordinary UI handler. Creating the wrapper, registering a tool, discovering it, or clicking a normal button does not record tool use. The wrapper records invocation before the callback, including failed attempts, and passes through arguments, return values, promises, and exceptions. It retains no tool arguments, results, or names. After `stop()`, the callback still runs but classification is frozen.
+
+For 30 seconds after invocation, refresh yields `likely_automated`, `heuristic`, `browser_signal`, with reason/signal `webmcp-tool-invoked`. Explicit agent declarations and WebDriver retain precedence. Recent tool use takes precedence over human-like inputs. Evidence expires on the next refresh/input after 30 seconds; no background timer runs. Stateless `detectSession()` does not retain this history. Page scripts and developer tools can also invoke WebMCP tools: this measures a tool channel, not verified AI identity.
+
+The demo registers `reverify_session`, a genuine local verification action. Its “AGENT TOOL USED” label is a presentation of this recent-use signal; analytics retain `likely_automated`. An agent using only screenshots/clicks can still remain unclassified or appear likely human. This does not solve universal passive agent detection.
+
+API reference: [WebMCP proposal](https://github.com/webmachinelearning/webmcp/blob/main/README.md). Feature-detect this evolving browser API; no polyfill or browser fingerprint is required by this package.

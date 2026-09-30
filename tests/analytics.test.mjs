@@ -69,3 +69,32 @@ test('analytics properties are serializable evidence metadata without experiment
   assert.equal('variant' in properties, false); assert.equal('sessionId' in properties, false);
   assert.deepEqual(JSON.parse(JSON.stringify(properties)), properties);
 });
+test('WebMCP wrapping does not classify until execution; evidence expires and stop freezes', () => {
+  const f = fixture(); const changes = [];
+  f.classifier.subscribe(value => changes.push(value));
+  const execute = f.classifier.wrapWebMCPTool(value => value * 2);
+  assert.equal(f.classifier.getSnapshot().segment, 'unclassified');
+  assert.equal(execute(3), 6);
+  const result = f.classifier.getSnapshot();
+  assert.equal(result.segment, 'likely_automated');
+  assert.equal(result.confidence, 'heuristic');
+  assert.deepEqual(result.reasons, ['webmcp-tool-invoked']);
+  assert.equal(result.detection.agentic, null);
+  assert.equal(f.scope.__SESSION_DRIVER__, undefined);
+  assert.equal(changes.length, 1);
+  human(f); assert.equal(f.classifier.getSnapshot().segment, 'likely_automated');
+  f.advance(31000); assert.equal(f.classifier.refresh().segment, 'unclassified');
+  f.classifier.stop(); execute(4); assert.equal(f.classifier.refresh().segment, 'unclassified');
+});
+test('tool wrapper preserves results and failures and respects browser/declaration precedence', async () => {
+  const f = fixture(); const promise = Promise.resolve({ ok: true });
+  assert.equal(f.classifier.wrapWebMCPTool(() => promise)(), promise);
+  const failure = Error('tool failed');
+  assert.throws(f.classifier.wrapWebMCPTool(() => { throw failure; }), error => error === failure);
+  f.scope.navigator.webdriver = true;
+  assert.equal(f.classifier.refresh().confidence, 'strong_signal');
+  f.scope.__SESSION_DRIVER__ = 'agent';
+  assert.equal(f.classifier.refresh().segment, 'declared_agent');
+  const native = createSessionClassifier({ scope: null }); native.wrapWebMCPTool(() => {})();
+  assert.equal(native.getSnapshot().segment, 'unclassified'); native.stop();
+});

@@ -11,10 +11,10 @@ Small, zero-runtime-dependency browser automation detector with explainable evid
 Install the published GitHub release with npm (no build tools required):
 
 ```sh
-npm install https://github.com/omegdadi/session-driver/releases/download/v0.2.0/omegdadi-session-driver-0.2.0.tgz
+npm install https://github.com/omegdadi/session-driver/releases/download/v0.3.0/omegdadi-session-driver-0.3.0.tgz
 ```
 
-The installed package name is `@omegdadi/session-driver`. Source is tagged `v0.2.0`. npm registry publication is pending: the initial publish was rejected by the registry, so a bare-name registry install is not yet available.
+The installed package name is `@omegdadi/session-driver`. Source is tagged `v0.3.0`. npm registry publication is pending: the initial publish was rejected by the registry, so a bare-name registry install is not yet available.
 
 ```js
 import { detectSession } from '@omegdadi/session-driver';
@@ -188,3 +188,7 @@ node scripts/serve-site.mjs
 ```
 
 To test a deployed copy: `DEMO_URL=https://omegdadi.github.io/session-driver/ npm run test:site`. The tests use fresh isolated browsers, including explicit declaration and hidden-flag cases.
+
+### Browser agents that hide WebDriver
+
+v0.3 adds `classifier.wrapWebMCPTool(execute)` to measure actual execution of your site's WebMCP tools. The [live demo](https://omegdadi.github.io/session-driver/) exposes `reverify_session`; ask a WebMCP-capable browser agent to invoke it and the page reports **AGENT TOOL USED**. Registration alone does not classify anyone. See [integration and limits](./ANALYTICS.md#measuring-actual-webmcp-tool-use-v03). Agents using only normal clicks can remain unclassified; this is not universal passive detection.

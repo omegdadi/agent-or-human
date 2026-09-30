@@ -67,7 +67,7 @@ test('notebook is bounded and exports genuine checks as JSON', async ({ page }) 
   expect(result.history).toHaveLength(12); expect(result.checks).toBeGreaterThanOrEqual(15);
   expect(result.library).toBe('@omegdadi/session-driver');
   expect(result.history[0].segment).toBe((await page.locator('#verdict').textContent()).toLowerCase().replaceAll(' ', '_'));
-  expect(result.version).toBe('0.2.0');
+  expect(result.version).toBe('0.3.0');
   expect(result.segmentTransitions.length).toBeGreaterThan(0);
 });
 test('mobile fits screen and switches work with keyboard', async ({ page }) => {
@@ -104,4 +104,22 @@ test('ordinary Chrome-like browsing develops a likely-human segment; experiment 
   expect(recorded.at(-1).session_driver_segment).toBe('likely_human');
   expect(recorded.at(-1).segment_at_exposure).toBe(recorded[0].session_driver_segment);
   await expect(page.locator('#example-variant')).toBeDisabled();
+});
+
+test('WebMCP registration and clicks do not classify; an instrumented execution does', async ({ page }) => {
+  // Mock registration only: actual browser-mediated invocation is separately checked in Codex IAB.
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'webdriver', { value: false });
+    Object.defineProperty(document, 'modelContext', { value: { registerTool(tool) { window.testRegisteredTool = tool; } } });
+  });
+  await open(page);
+  await expect(page.locator('#tool-status')).toContainText('Ready:');
+  await expect(page.locator('#verdict')).toHaveText('UNCLASSIFIED');
+  await page.getByRole('button', { name: 'Reverify session' }).click();
+  await expect(page.locator('#verdict')).toHaveText('UNCLASSIFIED');
+  const response = await page.evaluate(() => window.testRegisteredTool.execute({}));
+  expect(JSON.parse(response.content[0].text).session_driver_reasons).toEqual(['webmcp-tool-invoked']);
+  await expect(page.locator('#verdict')).toHaveText('AGENT TOOL USED');
+  await expect(page.locator('#basis')).toContainText('heuristic');
+  expect(await page.evaluate(() => window.__SESSION_DRIVER__)).toBeUndefined();
 });
