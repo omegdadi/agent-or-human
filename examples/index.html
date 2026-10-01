@@ -8,7 +8,7 @@
 const observer = AgentOrHuman.observeSession();
 function render(){document.getElementById('result').textContent=JSON.stringify(observer.getSnapshot(),null,2)}
 observer.subscribe(render);
-for(const [id,value] of [['agent','agent'],['human','human'],['clear',null]])document.getElementById(id).onclick=()=>{AgentOrHuman.declareSessionDriver(value);render()};
+for(const [id,value] of [['agent','agent'],['human','human'],['clear',null]])document.getElementById(id).onclick=()=>{AgentOrHuman.declareAgentOrHuman(value);render()};
 document.getElementById('refresh').onclick=render;render();
 window.addEventListener('pagehide',()=>observer.stop(),{once:true});
 </script></html>

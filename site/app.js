@@ -137,7 +137,7 @@ function renderLab() {
     scope: {
       document: { modelContext: enabled.webmcp ? {} : undefined, querySelector: () => enabled.overlay ? {} : null },
       navigator: { webdriver: enabled.webdriver },
-      __SESSION_DRIVER__: declaration || undefined,
+      __AGENT_OR_HUMAN__: declaration || undefined,
     },
     host: { debuggerAttached: enabled.debugger, agentActive: enabled.host },
     agentIndicatorSelectors: ['[data-demo-agent-overlay]'],
@@ -174,7 +174,7 @@ $('record-exposure').addEventListener('click', () => {
 });
 $('record-conversion').addEventListener('click', () => {
   if (!exposure) return;
-  experimentEvents.push({ event: 'example_conversion', variant: exposure.variant, segment_at_exposure: exposure.properties.session_driver_segment, ...toAnalyticsProperties(monitor.refresh()) });
+  experimentEvents.push({ event: 'example_conversion', variant: exposure.variant, segment_at_exposure: exposure.properties.agent_or_human_segment, ...toAnalyticsProperties(monitor.refresh()) });
   if (experimentEvents.length > 12) experimentEvents.splice(1, 1);
   renderExperiment();
 });

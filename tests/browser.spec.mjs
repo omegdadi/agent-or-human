@@ -28,7 +28,7 @@ test('hidden automation returns unknown instead of a false human verdict', async
 test('declaration follows agent-to-human handoff and clear', async ({ page }) => {
   const results = await page.evaluate(() => {
     Object.defineProperty(navigator, 'webdriver', { value: false });
-    return ['agent', 'human', null].map(value => { AgentOrHuman.declareSessionDriver(value); return AgentOrHuman.detectSession().verdict; });
+    return ['agent', 'human', null].map(value => { AgentOrHuman.declareAgentOrHuman(value); return AgentOrHuman.detectSession().verdict; });
   });
   expect(results).toEqual(['agent', 'human', 'unknown']);
 });

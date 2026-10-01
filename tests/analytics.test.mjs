@@ -34,11 +34,11 @@ test('UA strings and regular synthetic input do not establish automation', () =>
 test('automation signals override human-like behavior; declarations win over automation', () => {
   const f = fixture({ webdriver: true }); human(f);
   assert.equal(f.classifier.getSnapshot().segment, 'likely_automated'); assert.equal(f.classifier.getSnapshot().confidence, 'strong_signal');
-  f.scope.__SESSION_DRIVER__ = 'agent'; assert.equal(f.classifier.refresh().segment, 'declared_agent');
-  f.scope.__SESSION_DRIVER__ = 'human'; assert.equal(f.classifier.refresh().segment, 'likely_automated');
+  f.scope.__AGENT_OR_HUMAN__ = 'agent'; assert.equal(f.classifier.refresh().segment, 'declared_agent');
+  f.scope.__AGENT_OR_HUMAN__ = 'human'; assert.equal(f.classifier.refresh().segment, 'likely_automated');
 });
 test('a human declaration alone does not turn into measured human evidence', () => {
-  const f = fixture(); f.scope.__SESSION_DRIVER__ = 'human'; assert.equal(f.classifier.refresh().segment, 'unclassified');
+  const f = fixture(); f.scope.__AGENT_OR_HUMAN__ = 'human'; assert.equal(f.classifier.refresh().segment, 'unclassified');
 });
 test('segment changes notify once and recover to unclassified when evidence expires', () => {
   const f = fixture(); const transitions = [];
@@ -48,7 +48,7 @@ test('segment changes notify once and recover to unclassified when evidence expi
   const changedAt = transitions[0].changedAt;
   f.advance(100); assert.equal(f.classifier.refresh().changedAt, changedAt);
   f.advance(31000); assert.equal(f.classifier.refresh().segment, 'unclassified'); assert.equal(transitions.length, 2);
-  unsubscribe(); f.scope.__SESSION_DRIVER__ = 'agent'; f.classifier.refresh(); assert.equal(transitions.length, 2);
+  unsubscribe(); f.scope.__AGENT_OR_HUMAN__ = 'agent'; f.classifier.refresh(); assert.equal(transitions.length, 2);
 });
 test('snapshots isolate mutations; stop removes listeners and freezes output', () => {
   const f = fixture(); human(f); const snap = f.classifier.getSnapshot(); snap.reasons.length = 0; snap.behavior.modalities.push('injected');
@@ -65,7 +65,7 @@ test('bounded/coalesced evidence and unsupported environments', () => {
 });
 test('analytics properties are serializable evidence metadata without experiment assignment or IDs', () => {
   const f = fixture(); human(f); const properties = toAnalyticsProperties(f.classifier.getSnapshot());
-  assert.equal(properties.session_driver_segment, 'likely_human'); assert.ok(properties.session_driver_assessed_at);
+  assert.equal(properties.agent_or_human_segment, 'likely_human'); assert.ok(properties.agent_or_human_assessed_at);
   assert.equal('variant' in properties, false); assert.equal('sessionId' in properties, false);
   assert.deepEqual(JSON.parse(JSON.stringify(properties)), properties);
 });
@@ -80,7 +80,7 @@ test('WebMCP wrapping does not classify until execution; evidence expires and st
   assert.equal(result.confidence, 'heuristic');
   assert.deepEqual(result.reasons, ['webmcp-tool-invoked']);
   assert.equal(result.detection.agentic, null);
-  assert.equal(f.scope.__SESSION_DRIVER__, undefined);
+  assert.equal(f.scope.__AGENT_OR_HUMAN__, undefined);
   assert.equal(changes.length, 1);
   human(f); assert.equal(f.classifier.getSnapshot().segment, 'likely_automated');
   f.advance(31000); assert.equal(f.classifier.refresh().segment, 'unclassified');
@@ -93,7 +93,7 @@ test('tool wrapper preserves results and failures and respects browser/declarati
   assert.throws(f.classifier.wrapWebMCPTool(() => { throw failure; }), error => error === failure);
   f.scope.navigator.webdriver = true;
   assert.equal(f.classifier.refresh().confidence, 'strong_signal');
-  f.scope.__SESSION_DRIVER__ = 'agent';
+  f.scope.__AGENT_OR_HUMAN__ = 'agent';
   assert.equal(f.classifier.refresh().segment, 'declared_agent');
   const native = createSessionClassifier({ scope: null }); native.wrapWebMCPTool(() => {})();
   assert.equal(native.getSnapshot().segment, 'unclassified'); native.stop();
@@ -150,13 +150,13 @@ test('reentrant subscribers receive ordered immutable transitions', () => {
   const f = fixture(); const observed = [];
   f.classifier.subscribe(value => {
     if (value.segment === 'declared_agent') {
-      f.scope.__SESSION_DRIVER__ = undefined;
+      f.scope.__AGENT_OR_HUMAN__ = undefined;
       f.classifier.refresh();
       value.reasons.length = 0;
     }
   });
   f.classifier.subscribe(value => observed.push([value.segment, value.revision, [...value.reasons]]));
-  f.scope.__SESSION_DRIVER__ = 'agent'; f.classifier.refresh();
+  f.scope.__AGENT_OR_HUMAN__ = 'agent'; f.classifier.refresh();
   assert.deepEqual(observed, [['declared_agent', 1, ['declared-agent']], ['unclassified', 2, ['insufficient-interaction-evidence']]]);
 });
 test('unsubscribe and stop during dispatch suppress remaining and queued callbacks', () => {
@@ -164,10 +164,10 @@ test('unsubscribe and stop during dispatch suppress remaining and queued callbac
     const f = fixture(); let calls = 0; let unsubscribe;
     f.classifier.subscribe(() => {
       unsubscribe();
-      if (stop) { f.scope.__SESSION_DRIVER__ = undefined; f.classifier.refresh(); f.classifier.stop(); }
+      if (stop) { f.scope.__AGENT_OR_HUMAN__ = undefined; f.classifier.refresh(); f.classifier.stop(); }
     });
     unsubscribe = f.classifier.subscribe(() => calls++);
-    f.scope.__SESSION_DRIVER__ = 'agent'; f.classifier.refresh();
+    f.scope.__AGENT_OR_HUMAN__ = 'agent'; f.classifier.refresh();
     assert.equal(calls, 0); f.classifier.stop();
   }
 });

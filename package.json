@@ -1,6 +1,6 @@
 {
   "name": "agent-or-human",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Detect AI agent and browser automation signals for analytics and A/B testing. Live state changes, mouse, touch, pen, and keyboard. Zero dependencies.",
   "type": "module",
   "main": "./dist/index.cjs",

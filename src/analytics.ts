@@ -2,7 +2,7 @@ import { createPointerCollector, type PointerEvidence } from './pointer.js';
 export type { PointerEvidence } from './pointer.js';
 import { detectSession, type DetectOptions, type Detection } from './index.js';
 
-export const DETECTOR_VERSION = '0.7.0';
+export const DETECTOR_VERSION = '0.8.0';
 export type Segment = 'likely_human' | 'likely_automated' | 'declared_agent' | 'unclassified';
 /** Evidence quality, not a calibrated probability of identity. */
 export type SegmentConfidence = 'insufficient' | 'heuristic' | 'strong_signal' | 'declared';
@@ -217,19 +217,19 @@ export function createClassifier(options: ClassifierOptions, onAssessment?: (ass
 /** Flattened event properties for your existing analytics client. Sends nothing. */
 export function toAnalyticsProperties(assessment: SegmentAssessment) {
   return {
-    session_driver_segment: assessment.segment,
-    session_driver_confidence: assessment.confidence,
-    session_driver_basis: assessment.basis,
-    session_driver_reasons: [...assessment.reasons],
-    session_driver_signals: assessment.detection.signals.map(signal => signal.code),
-    session_driver_version: assessment.detectorVersion,
-    session_driver_assessed_at: assessment.assessedAt,
-    session_driver_changed_at: assessment.changedAt,
-    session_driver_revision: assessment.revision,
-    session_driver_environment: assessment.environment,
-    session_driver_provider_sources: assessment.providers.map(p => p.source),
-    session_driver_automation_providers: assessment.providers.filter(p => p.automated).map(p => p.source),
-    session_driver_pointer_mode: assessment.pointer.mode,
-    session_driver_pointer_reasons: [...assessment.pointer.reasons],
+    agent_or_human_segment: assessment.segment,
+    agent_or_human_confidence: assessment.confidence,
+    agent_or_human_basis: assessment.basis,
+    agent_or_human_reasons: [...assessment.reasons],
+    agent_or_human_signals: assessment.detection.signals.map(signal => signal.code),
+    agent_or_human_version: assessment.detectorVersion,
+    agent_or_human_assessed_at: assessment.assessedAt,
+    agent_or_human_changed_at: assessment.changedAt,
+    agent_or_human_revision: assessment.revision,
+    agent_or_human_environment: assessment.environment,
+    agent_or_human_provider_sources: assessment.providers.map(p => p.source),
+    agent_or_human_automation_providers: assessment.providers.filter(p => p.automated).map(p => p.source),
+    agent_or_human_pointer_mode: assessment.pointer.mode,
+    agent_or_human_pointer_reasons: [...assessment.pointer.reasons],
   };
 }

@@ -14,4 +14,4 @@ Official references: [npm trusted publishers](https://docs.npmjs.com/trusted-pub
 
 ## Compatibility
 
-v0.6 changes the package name and browser global (`AgentOrHuman`). JavaScript function names, declaration key `__SESSION_DRIVER__`, and analytics property prefix `session_driver_` remain stable. GitHub releases before v0.6 still contain the old package and retain their original tarballs. v0.6 removes the old UA-based headless signal and heuristic; dashboards consuming that reason code should no longer expect it.
+v0.8 completes the rebrand: the declaration helper is `declareAgentOrHuman`, the browser declaration key is `__AGENT_OR_HUMAN__`, and analytics properties use `agent_or_human_`. This is a breaking naming change from v0.7 with no legacy aliases. Migrate controller scripts and analytics schemas together. Older published releases and their immutable tarballs retain their original interfaces. See the README migration guide.

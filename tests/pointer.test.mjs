@@ -88,7 +88,7 @@ test('bounded aggregates expire, are mutation-safe, and reveal no coordinates or
   const a = f.result(); assert.equal(a.pointer.mouseGestures, 16);
   a.pointer.reasons.length = 0; assert.ok(f.result().pointer.reasons.length);
   assert.equal(/clientX|clientY|target|timeStamp/.test(JSON.stringify(f.result().pointer)), false);
-  assert.equal(toAnalyticsProperties(f.result()).session_driver_pointer_mode, 'classify');
+  assert.equal(toAnalyticsProperties(f.result()).agent_or_human_pointer_mode, 'classify');
   f.advance(31000); assert.equal(f.result().pointer.mouseGestures, 0); assert.equal(f.result().segment, 'unclassified');
   f.classifier.stop(); assert.equal([...f.listeners.values()].reduce((sum, v) => sum + v.size, 0), 0);
 });

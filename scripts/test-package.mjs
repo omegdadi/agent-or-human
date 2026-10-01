@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 const run = (args, cwd = process.cwd()) => execFileSync('npm', args, { cwd, encoding: 'utf8' });
 const packed = JSON.parse(run(['pack', '--json', '--ignore-scripts']))[0];
 assert.equal(packed.files.some(f => f.path.startsWith('node_modules/')), false);
-const temp = mkdtempSync(join(tmpdir(), 'session-driver-consumer-'));
+const temp = mkdtempSync(join(tmpdir(), 'agent-or-human-consumer-'));
 try {
   writeFileSync(join(temp, 'package.json'), '{"private":true,"type":"module"}');
   run(['install', '--ignore-scripts', '--no-audit', '--no-fund', resolve(packed.filename)], temp);

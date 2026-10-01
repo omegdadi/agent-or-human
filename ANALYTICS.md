@@ -1,4 +1,4 @@
-# Analytics segmentation (experimental, v0.7.0)
+# Analytics segmentation (experimental, v0.8.0)
 
 `createSessionClassifier()` is an opt-in heuristic for understanding website traffic. It adds behavior-based segments to the existing evidence-only `detectSession()` API. It is not an identity check, fraud gate, CAPTCHA, or validated human/agent classifier.
 
@@ -11,9 +11,9 @@ import { createSessionClassifier, toAnalyticsProperties } from 'agent-or-human';
 const classifier = createSessionClassifier();
 
 // "analytics" below is YOUR existing analytics client, not part of this package.
-analytics.track('session_driver_initial', toAnalyticsProperties(classifier.getSnapshot()));
+analytics.track('agent_or_human_initial', toAnalyticsProperties(classifier.getSnapshot()));
 const unsubscribe = classifier.subscribe(assessment => {
-  analytics.track('session_driver_changed', toAnalyticsProperties(assessment));
+  analytics.track('agent_or_human_changed', toAnalyticsProperties(assessment));
 });
 
 // Attach a fresh assessment to the events you already measure.
@@ -67,7 +67,7 @@ analytics.track('experiment_exposure', {
 analytics.track('conversion', {
   experiment: 'checkout-v3',
   variant: exposure.variant,
-  segment_at_exposure: exposure.properties.session_driver_segment,
+  segment_at_exposure: exposure.properties.agent_or_human_segment,
   ...toAnalyticsProperties(classifier.refresh()),
 });
 ```

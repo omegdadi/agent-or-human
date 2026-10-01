@@ -23,7 +23,7 @@ export interface BrowserScope {
         userAgent?: unknown;
         modelContext?: unknown;
     };
-    __SESSION_DRIVER__?: unknown;
+    __AGENT_OR_HUMAN__?: unknown;
     addEventListener?: (type: string, listener: (event: {
         isTrusted: boolean;
     }) => void, options?: boolean) => void;
@@ -45,7 +45,7 @@ export interface DetectOptions {
 /** Detect positive automation evidence; absence of evidence never establishes a human. */
 export declare function detectSession(options?: DetectOptions): Detection;
 /** Declare who is driving this page. Call again on handoff; clear on session end. */
-export declare function declareSessionDriver(driver: Driver | null, options?: DetectOptions): boolean;
+export declare function declareAgentOrHuman(driver: Driver | null, options?: DetectOptions): boolean;
 export interface SessionSnapshot extends Detection {
     /** Aggregate counts only. Trusted browser events can also come from automation. */
     interactions: {

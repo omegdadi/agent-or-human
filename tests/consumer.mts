@@ -1,10 +1,10 @@
-import { detectSession, observeSession, declareSessionDriver, type Detection } from 'agent-or-human';
+import { detectSession, observeSession, declareAgentOrHuman, type Detection } from 'agent-or-human';
 const result: Detection = detectSession();
 const observer = observeSession({ host: { agentActive: true } });
 observer.subscribe(value => { const count: number = value.interactions.trusted; });
-declareSessionDriver('agent');
+declareAgentOrHuman('agent');
 // @ts-expect-error incorrect declaration
- declareSessionDriver('robot');
+ declareAgentOrHuman('robot');
 
 import {createSessionClassifier, toAnalyticsProperties} from 'agent-or-human';
 const classifier = createSessionClassifier();

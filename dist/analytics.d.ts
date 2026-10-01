@@ -1,7 +1,7 @@
 import { type PointerEvidence } from './pointer.js';
 export type { PointerEvidence } from './pointer.js';
 import { type DetectOptions, type Detection } from './index.js';
-export declare const DETECTOR_VERSION = "0.7.0";
+export declare const DETECTOR_VERSION = "0.8.0";
 export type Segment = 'likely_human' | 'likely_automated' | 'declared_agent' | 'unclassified';
 /** Evidence quality, not a calibrated probability of identity. */
 export type SegmentConfidence = 'insufficient' | 'heuristic' | 'strong_signal' | 'declared';
@@ -58,18 +58,18 @@ export declare function createSessionClassifier(options?: ClassifierOptions): Se
 export declare function createClassifier(options: ClassifierOptions, onAssessment?: (assessment: SegmentAssessment) => void, readProviders?: (now: number) => AutomationEvidence[]): SessionClassifier;
 /** Flattened event properties for your existing analytics client. Sends nothing. */
 export declare function toAnalyticsProperties(assessment: SegmentAssessment): {
-    session_driver_segment: Segment;
-    session_driver_confidence: SegmentConfidence;
-    session_driver_basis: "declaration" | "none" | "behavior" | "browser_signal" | "provider";
-    session_driver_reasons: string[];
-    session_driver_signals: ("declared-agent" | "declared-human" | "webdriver" | "unreadable-property" | "declaration-conflict" | "debugger-attached" | "agent-ui-indicator" | "invalid-selector" | "host-agent-active" | "webmcp-available" | "webmcp-tool-invoked")[];
-    session_driver_version: string;
-    session_driver_assessed_at: number;
-    session_driver_changed_at: number;
-    session_driver_revision: number;
-    session_driver_environment: "browser" | "unsupported";
-    session_driver_provider_sources: string[];
-    session_driver_automation_providers: string[];
-    session_driver_pointer_mode: "off" | "observe" | "classify";
-    session_driver_pointer_reasons: string[];
+    agent_or_human_segment: Segment;
+    agent_or_human_confidence: SegmentConfidence;
+    agent_or_human_basis: "declaration" | "none" | "behavior" | "browser_signal" | "provider";
+    agent_or_human_reasons: string[];
+    agent_or_human_signals: ("declared-agent" | "declared-human" | "webdriver" | "unreadable-property" | "declaration-conflict" | "debugger-attached" | "agent-ui-indicator" | "invalid-selector" | "host-agent-active" | "webmcp-available" | "webmcp-tool-invoked")[];
+    agent_or_human_version: string;
+    agent_or_human_assessed_at: number;
+    agent_or_human_changed_at: number;
+    agent_or_human_revision: number;
+    agent_or_human_environment: "browser" | "unsupported";
+    agent_or_human_provider_sources: string[];
+    agent_or_human_automation_providers: string[];
+    agent_or_human_pointer_mode: "off" | "observe" | "classify";
+    agent_or_human_pointer_reasons: string[];
 };

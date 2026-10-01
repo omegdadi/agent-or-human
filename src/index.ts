@@ -19,7 +19,7 @@ export interface BrowserScope {
   document?: unknown;
   PointerEvent?: unknown;
   navigator?: { webdriver?: unknown; userAgent?: unknown; modelContext?: unknown };
-  __SESSION_DRIVER__?: unknown;
+  __AGENT_OR_HUMAN__?: unknown;
   addEventListener?: (type: string, listener: (event: { isTrusted: boolean }) => void, options?: boolean) => void;
   removeEventListener?: (type: string, listener: (event: { isTrusted: boolean }) => void, options?: boolean) => void;
 }
@@ -63,7 +63,7 @@ export function detectSession(options: DetectOptions = {}): Detection {
     } catch { signals.push({ code: 'invalid-selector', strength: 'diagnostic' }); }
   }
   const webdriver = read(navigator, 'webdriver', signals) === true;
-  const declaration = read(scope, '__SESSION_DRIVER__', signals);
+  const declaration = read(scope, '__AGENT_OR_HUMAN__', signals);
   if (webdriver) signals.push({ code: 'webdriver', strength: 'strong' });
   if (options.host?.agentActive === true) {
     signals.push({ code: 'host-agent-active', strength: 'declaration' });
@@ -83,14 +83,14 @@ export function detectSession(options: DetectOptions = {}): Detection {
   return empty('unknown');
 }
 /** Declare who is driving this page. Call again on handoff; clear on session end. */
-export function declareSessionDriver(driver: Driver | null, options: DetectOptions = {}): boolean {
+export function declareAgentOrHuman(driver: Driver | null, options: DetectOptions = {}): boolean {
   if (driver !== null && driver !== 'agent' && driver !== 'human') throw new TypeError('Expected agent, human, or null');
   const scope = getScope(options);
   if (!scope) return false;
   try {
     if (!scope.document) return false;
-    if (driver === null) delete scope.__SESSION_DRIVER__;
-    else scope.__SESSION_DRIVER__ = driver;
+    if (driver === null) delete scope.__AGENT_OR_HUMAN__;
+    else scope.__AGENT_OR_HUMAN__ = driver;
     return true;
   } catch { return false; }
 }

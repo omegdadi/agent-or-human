@@ -62,14 +62,14 @@ test('polling expires tool evidence without input and observes external declarat
   monitor.onstatechange = e => states.push(e.state);
   monitor.wrapWebMCPTool(() => 42)();
   t.mock.timers.tick(31000); assert.equal(monitor.state, 'unclassified');
-  scope.__SESSION_DRIVER__ = 'agent'; t.mock.timers.tick(1000); assert.equal(monitor.state, 'declared_agent');
+  scope.__AGENT_OR_HUMAN__ = 'agent'; t.mock.timers.tick(1000); assert.equal(monitor.state, 'declared_agent');
   assert.deepEqual(states, ['likely_automated','unclassified','declared_agent']); monitor.stop();
 });
 test('lifecycle wake refreshes after suspension; stop removes all listeners and freezes state', () => {
   const { monitor, scope, emit, listeners } = fixture(); let count = 0;
   monitor.onstatechange = () => count++;
-  scope.__SESSION_DRIVER__ = 'agent'; emit('pageshow'); assert.equal(count, 1);
-  monitor.stop(); monitor.stop(); scope.__SESSION_DRIVER__ = undefined; emit('visibilitychange'); monitor.refresh();
+  scope.__AGENT_OR_HUMAN__ = 'agent'; emit('pageshow'); assert.equal(count, 1);
+  monitor.stop(); monitor.stop(); scope.__AGENT_OR_HUMAN__ = undefined; emit('visibilitychange'); monitor.refresh();
   assert.equal(monitor.state, 'declared_agent'); assert.equal(monitor.stopped, true); assert.equal(monitor.onstatechange, null);
   assert.equal([...listeners.values()].reduce((sum, set) => sum + set.size, 0), 0);
 });
@@ -85,7 +85,7 @@ test('stop cancels timers and removes AbortSignal hooks; handlers can be cleared
   monitor.addEventListener('statechange', () => { monitor.onstatechange = null; }, { signal });
   monitor.setHostState({ agentActive: true }); assert.equal(called, 0); assert.equal(abortHandlers.size, 1);
   const at = monitor.assessment.assessedAt; monitor.stop(); assert.equal(abortHandlers.size, 0);
-  scope.__SESSION_DRIVER__ = 'human'; t.mock.timers.tick(60000);
+  scope.__AGENT_OR_HUMAN__ = 'human'; t.mock.timers.tick(60000);
   assert.equal(monitor.assessment.assessedAt, at); assert.equal(monitor.state, 'declared_agent');
 });
 

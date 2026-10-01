@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 test('comparison loads BotD only on request, displays real result and clears evidence',async({page})=>{
  const requests=[];page.on('request',r=>requests.push(r.url()));await page.goto('compare/');
- await expect(page.locator('#session-result')).toContainText('0.7.0');expect(requests.some(u=>u.endsWith('/lib/botd.js'))).toBe(false);
+ await expect(page.locator('#session-result')).toContainText('0.8.0');expect(requests.some(u=>u.endsWith('/lib/botd.js'))).toBe(false);
  await page.locator('#run-botd').click();await expect(page.locator('#comparison-status')).toContainText('Check complete');
  await expect(page.locator('#session-result')).toContainText('"source": "botd"');await expect(page.locator('#botd-result')).toContainText('"bot":');
  expect(requests.filter(u=>!u.startsWith('http://127.0.0.1:4178/'))).toEqual([]);

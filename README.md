@@ -93,15 +93,15 @@ Sources: [W3C WebDriver](https://www.w3.org/TR/webdriver/#interface), [MDN webdr
 ## Cooperative handoffs
 
 ```js
-import { declareSessionDriver, detectSession } from 'agent-or-human';
-declareSessionDriver('agent'); // true on success, false outside a writable browser
+import { declareAgentOrHuman, detectSession } from 'agent-or-human';
+declareAgentOrHuman('agent'); // true on success, false outside a writable browser
 console.log(detectSession().verdict); // agent
 
-declareSessionDriver('human'); // explicit handoff; not a verification step
-declareSessionDriver(null);    // clear when the session ends
+declareAgentOrHuman('human'); // explicit handoff; not a verification step
+declareAgentOrHuman(null);    // clear when the session ends
 ```
 
-This writes `window.__SESSION_DRIVER__`. An agent controller may set the same property before the page runs. It is per-window, resets on navigation, and can be changed by any script on the page. Invalid driver values throw a TypeError. Clear/update it on every handoff; no stale declaration detection is possible without host cooperation.
+This writes `window.__AGENT_OR_HUMAN__`. An agent controller may set the same property before the page runs. It is per-window, resets on navigation, and can be changed by any script on the page. Invalid driver values throw a TypeError. Clear/update it on every handoff; no stale declaration detection is possible without host cooperation.
 
 ## Observe input (optional)
 
@@ -238,7 +238,11 @@ The core uses browser capabilities and observed evidence, never user-agent parsi
 
 Chromium, Firefox, and WebKit are tested, with additional Android phone, iPhone, and iPad emulation. Emulation verifies event handling and layout, not physical-device accuracy. Native Expo/React Native has no browser session and returns unsupported; Expo web and Electron renderers use the browser API.
 
-Existing API names, `__SESSION_DRIVER__` declarations, and `session_driver_*` analytics keys are preserved for integrations. The standalone script is now `agent-or-human.global.js`, exposing `AgentOrHuman`.
+## Migrating to v0.8
+
+v0.8 completes the public API rebrand. Replace the previous declaration helper with `declareAgentOrHuman`, update controller integrations to set `window.__AGENT_OR_HUMAN__`, and switch analytics consumers to the `agent_or_human_*` property prefix. Example event names now use that prefix too. Update saved dashboard queries, ingestion schemas, and exposure-property reads together; historical analytics data is not rewritten. No legacy aliases or duplicate analytics properties are emitted. These are breaking naming changes from v0.7; classification behavior is unchanged.
+
+The standalone script is `agent-or-human.global.js`, exposing `AgentOrHuman`.
 
 ## Why use this with BotD?
 

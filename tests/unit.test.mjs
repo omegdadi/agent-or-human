@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
-import { detectSession, declareSessionDriver, observeSession } from '../dist/index.js';
+import { detectSession, declareAgentOrHuman, observeSession } from '../dist/index.js';
 const browser = (navigator = {}) => ({ document: {}, navigator });
 test('ESM and CommonJS imports are safe in SSR', () => {
   assert.equal(detectSession().verdict, 'unsupported');
@@ -31,18 +31,18 @@ test('user-agent strings are not detection evidence', () => {
 });
 test('cooperative agent/human declaration and clearing', () => {
   const scope = browser();
-  assert.equal(declareSessionDriver('agent', { scope }), true);
+  assert.equal(declareAgentOrHuman('agent', { scope }), true);
   assert.equal(detectSession({ scope }).agentic, true);
-  declareSessionDriver('human', { scope });
+  declareAgentOrHuman('human', { scope });
   assert.equal(detectSession({ scope }).verdict, 'human');
   assert.equal(detectSession({ scope }).automated, null);
-  declareSessionDriver(null, { scope });
+  declareAgentOrHuman(null, { scope });
   assert.equal(detectSession({ scope }).verdict, 'unknown');
-  assert.equal(declareSessionDriver('agent', { scope: null }), false);
-  assert.throws(() => declareSessionDriver('bot', { scope }), TypeError);
+  assert.equal(declareAgentOrHuman('agent', { scope: null }), false);
+  assert.throws(() => declareAgentOrHuman('bot', { scope }), TypeError);
 });
 test('human declaration cannot suppress positive WebDriver evidence', () => {
-  const scope = browser({ webdriver: true }); scope.__SESSION_DRIVER__ = 'human';
+  const scope = browser({ webdriver: true }); scope.__AGENT_OR_HUMAN__ = 'human';
   const result = detectSession({ scope });
   assert.equal(result.verdict, 'automated');
   assert.ok(result.signals.some(s => s.code === 'declaration-conflict'));
@@ -70,7 +70,7 @@ test('restricted browser properties and frozen declarations do not throw', () =>
   const scope = browser({ get webdriver() { throw Error('blocked'); } });
   assert.equal(detectSession({ scope }).verdict, 'unknown');
   assert.equal(detectSession({ scope: { get document() { throw Error(); } } }).verdict, 'unsupported');
-  assert.equal(declareSessionDriver('agent', { scope: Object.freeze(browser()) }), false);
+  assert.equal(declareAgentOrHuman('agent', { scope: Object.freeze(browser()) }), false);
 });
 test('observer tracks counts, not human identity; supports unsubscribe and teardown', () => {
   const events = new Map(); const scope = browser();

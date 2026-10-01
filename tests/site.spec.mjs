@@ -34,7 +34,7 @@ test('lab demonstrates each technique without changing the live verdict', async 
     await expect(page.locator('#lab-verdict')).toHaveText(expected);
     await expect(page.locator('#verdict')).toHaveText(actual);
   }
-  expect(await page.evaluate(() => window.__SESSION_DRIVER__)).toBeUndefined();
+  expect(await page.evaluate(() => window.__AGENT_OR_HUMAN__)).toBeUndefined();
   await page.locator('#lab-host').check();
   await expect(page.locator('#lab-verdict')).toHaveText('AGENT');
   await page.locator('#lab-host').uncheck();
@@ -45,11 +45,11 @@ test('ordinary/hidden control stays unknown rather than human', async ({ page })
   await open(page); await expect(page.locator('#verdict')).toHaveText('UNCLASSIFIED');
 });
 test('explicit live declarations show human/agent with visible caveat', async ({ page }) => {
-  await page.addInitScript(() => { Object.defineProperty(navigator, 'webdriver', { value: false }); window.__SESSION_DRIVER__ = 'human'; });
+  await page.addInitScript(() => { Object.defineProperty(navigator, 'webdriver', { value: false }); window.__AGENT_OR_HUMAN__ = 'human'; });
   await open(page);
   await expect(page.locator('#verdict')).toHaveText('UNCLASSIFIED');
   await expect(page.locator('#segment-reasons')).toContainText('human-declaration-not-independently-verified');
-  await page.evaluate(() => { window.__SESSION_DRIVER__ = 'agent'; });
+  await page.evaluate(() => { window.__AGENT_OR_HUMAN__ = 'agent'; });
   await page.getByRole('button', { name: 'Reverify session' }).click();
   await expect(page.locator('#verdict')).toHaveText('DECLARED AGENT');
 });
@@ -67,7 +67,7 @@ test('notebook is bounded and exports genuine checks as JSON', async ({ page }) 
   expect(result.history).toHaveLength(12); expect(result.checks).toBeGreaterThanOrEqual(15);
   expect(result.library).toBe('agent-or-human');
   expect(result.history[0].segment).toBe((await page.locator('#verdict').textContent()).toLowerCase().replaceAll(' ', '_'));
-  expect(result.version).toBe('0.7.0');
+  expect(result.version).toBe('0.8.0');
   expect(result.currentAssessment.pointer.mode).toBe('classify');
   expect(result.validationContext.source).toBe('self-reported-not-used-by-classifier');
   expect(result.segmentTransitions.length).toBeGreaterThan(0);
@@ -103,8 +103,8 @@ test('ordinary Chrome-like browsing develops a likely-human segment; experiment 
   await page.getByRole('button', { name: 'Record conversion', exact: true }).click();
   const recorded = JSON.parse(await page.locator('#experiment-result').textContent());
   expect(recorded[0].variant).toBe('B'); expect(recorded.at(-1).variant).toBe('B');
-  expect(recorded.at(-1).session_driver_segment).toBe('likely_human');
-  expect(recorded.at(-1).segment_at_exposure).toBe(recorded[0].session_driver_segment);
+  expect(recorded.at(-1).agent_or_human_segment).toBe('likely_human');
+  expect(recorded.at(-1).segment_at_exposure).toBe(recorded[0].agent_or_human_segment);
   await expect(page.locator('#example-variant')).toBeDisabled();
 });
 
@@ -120,10 +120,10 @@ test('WebMCP registration and clicks do not classify; an instrumented execution 
   await page.getByRole('button', { name: 'Reverify session' }).click();
   await expect(page.locator('#verdict')).toHaveText('UNCLASSIFIED');
   const response = await page.evaluate(() => window.testRegisteredTool.execute({}));
-  expect(JSON.parse(response.content[0].text).session_driver_reasons).toEqual(['webmcp-tool-invoked']);
+  expect(JSON.parse(response.content[0].text).agent_or_human_reasons).toEqual(['webmcp-tool-invoked']);
   await expect(page.locator('#verdict')).toHaveText('AGENT TOOL USED');
   await expect(page.locator('#basis')).toContainText('heuristic');
-  expect(await page.evaluate(() => window.__SESSION_DRIVER__)).toBeUndefined();
+  expect(await page.evaluate(() => window.__AGENT_OR_HUMAN__)).toBeUndefined();
 });
 
 test('ordinary mouse automation is inferred from multiple signals with webdriver hidden', async ({ page }) => {
@@ -145,7 +145,7 @@ test('validation labels never become detector declarations', async ({ page }) =>
   await page.addInitScript(() => Object.defineProperty(navigator, 'webdriver', { value: false }));
   await open(page); await page.locator('#validation-driver').selectOption('agent');
   await expect(page.locator('#verdict')).toHaveText('UNCLASSIFIED');
-  expect(await page.evaluate(() => window.__SESSION_DRIVER__)).toBeUndefined();
+  expect(await page.evaluate(() => window.__AGENT_OR_HUMAN__)).toBeUndefined();
 });
 
 test('monitor delivers browser-style events and timer-driven expiry with real AbortSignal', async ({ page }) => {
