@@ -2,7 +2,7 @@ name: Demo · GitHub Pages
 on:
   push:
     branches: [main]
-    paths: ['src/**', 'site/**', 'dist/**', 'scripts/build-site.mjs', 'scripts/serve-site.mjs', 'tests/site.spec.mjs', 'playwright.site.config.mjs', '.github/workflows/pages.yml', 'package.json', 'package-lock.json']
+    paths: ['src/**', 'site/**', 'dist/**', 'scripts/build-site.mjs', 'scripts/serve-site.mjs', 'tests/site.spec.mjs', 'tests/comparison.spec.mjs', 'playwright.site.config.mjs', '.github/workflows/pages.yml', 'package.json', 'package-lock.json']
   workflow_dispatch:
 permissions:
   contents: read

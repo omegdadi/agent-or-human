@@ -29,3 +29,10 @@ function sessionMonitorForReceiver() {
   return wrapped;
 }
 const receiverResult: number = receiver.execute(2);
+
+import { connectBotD, createSessionHistory } from 'agent-or-human';
+const evidenceHistory = createSessionHistory(monitor, { limit: 20 });
+const botdConnection = connectBotD(monitor, { async collect() {}, detect: () => ({ bot: false }) });
+monitor.setAutomationEvidence('example', { automated: true, ttlMs: 1000 });
+const duration: number = evidenceHistory.getSummary().durationsMs.unclassified;
+botdConnection.stop(); evidenceHistory.stop();

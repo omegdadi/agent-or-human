@@ -63,6 +63,10 @@ export interface SessionObserver {
 /** Optional event observation. No timers, storage, network, or import-time listeners. */
 export declare function observeSession(options?: DetectOptions): SessionObserver;
 export { createSessionClassifier, toAnalyticsProperties, DETECTOR_VERSION } from './analytics.cjs';
-export type { Segment, SegmentConfidence, SegmentAssessment, ClassifierOptions, SessionClassifier, PointerEvidence } from './analytics.cjs';
+export type { Segment, SegmentConfidence, SegmentAssessment, ClassifierOptions, SessionClassifier, PointerEvidence, AutomationEvidence } from './analytics.cjs';
 export { createSessionMonitor } from './monitor.cjs';
 export type { SessionMonitor, SessionMonitorOptions, SessionChangeEvent, SessionEventType, SessionEventListener, SessionListenerOptions, SessionAbortSignal } from './monitor.cjs';
+export { connectBotD } from './botd.cjs';
+export type { BotDDetector, BotDResult, BotDConnection } from './botd.cjs';
+export { createSessionHistory } from './history.cjs';
+export type { SessionHistory, SessionHistoryEntry, SessionHistorySummary } from './history.cjs';

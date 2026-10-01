@@ -239,3 +239,7 @@ The core uses browser capabilities and observed evidence, never user-agent parsi
 Chromium, Firefox, and WebKit are tested, with additional Android phone, iPhone, and iPad emulation. Emulation verifies event handling and layout, not physical-device accuracy. Native Expo/React Native has no browser session and returns unsupported; Expo web and Electron renderers use the browser API.
 
 Existing API names, `__SESSION_DRIVER__` declarations, and `session_driver_*` analytics keys are preserved for integrations. The standalone script is now `agent-or-human.global.js`, exposing `AgentOrHuman`.
+
+## Why use this with BotD?
+
+BotD checks browser automation signatures. Agent or Human adds live analytics segments, evidence expiry, state-change listeners and bounded session history. Use either or combine both with `connectBotD`; a negative BotD result never implies human. There is no established accuracy advantage. [Live comparison](https://omegdadi.github.io/agent-or-human/compare/) · [Integration and limitations](COMPARISON.md).

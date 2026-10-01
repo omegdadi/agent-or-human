@@ -67,7 +67,7 @@ test('notebook is bounded and exports genuine checks as JSON', async ({ page }) 
   expect(result.history).toHaveLength(12); expect(result.checks).toBeGreaterThanOrEqual(15);
   expect(result.library).toBe('agent-or-human');
   expect(result.history[0].segment).toBe((await page.locator('#verdict').textContent()).toLowerCase().replaceAll(' ', '_'));
-  expect(result.version).toBe('0.6.1');
+  expect(result.version).toBe('0.7.0');
   expect(result.currentAssessment.pointer.mode).toBe('classify');
   expect(result.validationContext.source).toBe('self-reported-not-used-by-classifier');
   expect(result.segmentTransitions.length).toBeGreaterThan(0);

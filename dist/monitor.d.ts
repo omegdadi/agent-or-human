@@ -40,6 +40,12 @@ export interface SessionMonitor {
     removeEventListener(type: SessionEventType, listener: SessionEventListener | null, options?: boolean | SessionListenerOptions): void;
     refresh(): SegmentAssessment;
     /** Replace host evidence, including clearing omitted fields. This is a cooperative declaration, not attestation. */
+    /** Add provider evidence for 1 ms–1 hour (default 60 s); null removes it. Never asserts AI identity. */
+    setAutomationEvidence(source: string, result: {
+        automated: boolean;
+        kind?: string;
+        ttlMs?: number;
+    } | null): SegmentAssessment;
     setHostState(host: NonNullable<DetectOptions['host']>): SegmentAssessment;
     wrapWebMCPTool<This, Args extends unknown[], Result>(execute: (this: This, ...args: Args) => Result): (this: This, ...args: Args) => Result;
     /** Remove listeners, polling, and input collection; freeze the last assessment. */

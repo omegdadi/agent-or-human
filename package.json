@@ -1,6 +1,6 @@
 {
   "name": "agent-or-human",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Detect AI agent and browser automation signals for analytics and A/B testing. Live state changes, mouse, touch, pen, and keyboard. Zero dependencies.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -26,7 +26,8 @@
     "LICENSE",
     "ANALYTICS.md",
     "RESEARCH.md",
-    "PUBLISHING.md"
+    "PUBLISHING.md",
+    "COMPARISON.md"
   ],
   "sideEffects": false,
   "license": "MIT",
@@ -54,7 +55,7 @@
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "npm run build && node --test tests/unit.test.mjs tests/analytics.test.mjs tests/pointer.test.mjs tests/monitor.test.mjs && tsc -p tests/tsconfig.json",
+    "test": "npm run build && node --test tests/evidence.test.mjs tests/unit.test.mjs tests/analytics.test.mjs tests/pointer.test.mjs tests/monitor.test.mjs && tsc -p tests/tsconfig.json",
     "test:browser": "playwright test",
     "test:electron": "node tests/electron.mjs",
     "test:package": "node scripts/test-package.mjs",
@@ -66,6 +67,7 @@
     "test:inputs": "playwright test --config playwright.inputs.config.mjs"
   },
   "devDependencies": {
+    "@fingerprintjs/botd": "2.0.0",
     "@playwright/test": "1.63.0",
     "@types/react": "19.2.14",
     "electron": "44.4.5",

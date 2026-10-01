@@ -1,4 +1,4 @@
-# Analytics segmentation (experimental, v0.6.1)
+# Analytics segmentation (experimental, v0.7.0)
 
 `createSessionClassifier()` is an opt-in heuristic for understanding website traffic. It adds behavior-based segments to the existing evidence-only `detectSession()` API. It is not an identity check, fraud gate, CAPTCHA, or validated human/agent classifier.
 
@@ -147,3 +147,7 @@ This option temporarily processes coordinates and target geometry in local memor
 - `wrapWebMCPTool()` retains the existing invocation-only behavior. `stop()` cancels polling, input collection, lifecycle hooks, registrations, AbortSignal hooks, and pending notifications. It is idempotent and freezes the last reported state. Create a new monitor to restart. Unsupported/native/SSR scopes start no polling timer and return an unsupported assessment; the API does not require DOM EventTarget constructors.
 
 The original `createSessionClassifier().subscribe()` remains compatible and timer-free. Choose a monitor when your UI or analytics needs continuously maintained state; choose the classifier when your application owns refresh scheduling. React/Expo web: create inside an effect and return `() => session.stop()`; SSR imports are safe. Electron renderers use the same API and feed host updates through their existing narrow bridge.
+
+## Optional providers and session history
+
+`connectBotD` accepts a separately loaded detector, recollects on explicit refresh, and records expiring provider evidence. `setAutomationEvidence` supports other detector results. Positive provider results use `basis: "provider"` and heuristic confidence; negative results never prove a human. Analytics properties include provider names and positive provider names. `createSessionHistory` retains bounded state transitions and elapsed wall-clock time per segment; it stores nothing remotely. Stop it explicitly during teardown. See [comparison and lifecycle contracts](COMPARISON.md).

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent or Human vs BotD — Live Session Evidence</title>
+<meta name="description" content="Compare BotD automation signatures with Agent or Human's live session evidence, optional BotD integration, evidence expiry, and analytics history. Try both in your browser.">
+<link rel="canonical" href="https://omegdadi.github.io/agent-or-human/compare/">
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="./compare.css"><link rel="icon" href="../favicon.svg">
+</head><body>
+<header class="nav wrap"><a class="brand" href="../"><span class="brandmark">a/h</span> agent or human</a><a href="https://github.com/omegdadi/agent-or-human">GitHub ↗</a></header>
+<main class="wrap">
+<section class="hero"><div class="eyebrow">BOTD COMPARISON · OCTOBER 2026</div><h1>Detect a bot.<br>Understand a session.</h1>
+<p class="intro">BotD checks automation signatures. Agent or Human adds live evidence changes, expiry, and analytics history—and can use BotD as an optional evidence source.</p>
+<p><strong>Use BotD alone when you need a browser automation check.</strong> Choose Agent or Human when your product needs to follow evidence over time, observe cooperative host or tool activity, and preserve that context in analytics.</p>
+<div class="honesty"><p><strong>No accuracy victory claimed.</strong> We have not established higher detection accuracy than BotD. Interaction heuristics are experimental; declarations and tool use do not authenticate an AI agent. Free, MIT-licensed, client-side detection is shared ground.</p></div></section>
+<section aria-labelledby="comparison-title"><h2 id="comparison-title">What you get</h2><div class="history-scroll"><table class="comparison"><thead><tr><th>Capability</th><th>BotD 2.0.0</th><th>Agent or Human 0.7</th></tr></thead><tbody>
+<tr><td>Automation signatures</td><td>Broader browser/runtime detector set</td><td>Core signals; optionally incorporates BotD</td></tr>
+<tr><td>Result</td><td>Bot detected or not detected, with bot kind</td><td>Qualified segments, reasons, and explicit uncertainty</td></tr>
+<tr><td>Changes over time</td><td>You manage recollection and comparison</td><td>State and assessment events; evidence expiry</td></tr>
+<tr><td>Session history</td><td>You build it</td><td>Bounded transitions and wall-clock time by segment</td></tr>
+<tr><td>Agent cooperation</td><td>No host-handoff or WebMCP wrapper in the inspected API</td><td>Host declarations and instrumented tool-use evidence</td></tr>
+<tr><td>Behavior</td><td>Browser/environment inspection</td><td>Optional, uncalibrated mouse and interaction heuristics</td></tr>
+<tr><td>Data sent by default</td><td>npm build has optional sampled installation telemetry</td><td>Core sends nothing; comparison disables BotD telemetry</td></tr>
+</tbody></table></div><p class="footnote">Sources: <a href="https://github.com/fingerprintjs/BotD/blob/main/docs/api.md">BotD API</a>, <a href="https://github.com/fingerprintjs/BotD/tree/main/src/detectors">detectors</a>, <a href="https://github.com/omegdadi/agent-or-human/blob/main/ANALYTICS.md">our API contracts</a>. BotD exposes per-detector results too. Not detected never proves human.</p></section>
+<section class="pointer-section" aria-labelledby="live-title"><div class="eyebrow">REAL LIBRARIES · YOUR BROWSER</div><h2 id="live-title">Try them together</h2><p>The left result is an independent BotD check. On request, its output also becomes expiring evidence in the monitor on the right. No raw BotD components are exported. BotD is loaded from this site only after you press the button, with <code>monitoring: false</code>. Its optional checks may inspect user-agent and browser properties; our core does not parse user agents.</p>
+<div class="example-actions"><button id="run-botd" class="primary">Run BotD check</button><button id="clear-botd" class="secondary" disabled>Remove BotD evidence</button></div><p id="comparison-status" role="status">BotD has not been loaded.</p>
+<div class="compare-grid"><article class="behavior-panel"><h3>BotD 2.0.0</h3><p id="botd-label">NOT RUN</p><pre id="botd-result">No result yet.</pre><p>Latest completed check; this card is not a continuous monitor.</p></article><article class="behavior-panel"><h3>Agent or Human</h3><p id="session-label" role="status">CHECKING</p><pre id="session-result"></pre><p>Positive BotD evidence is heuristic automation evidence, never an AI identity. A negative result never declares a human. Provider evidence expires after 60 seconds unless refreshed.</p></article></div>
+<h3>Session timeline</h3><p>Browse this page or run the comparison. The history records changes locally. Counts include changes even after older entries leave the bounded display. Time includes idle and background time, not engagement.</p><pre id="session-summary"></pre><pre id="session-history">No transitions yet.</pre><button id="export-comparison" class="secondary">Download comparison evidence</button>
+</section>
+<section class="pointer-section"><h2>A testable difference</h2><p>An unchanged browser environment can contain new evidence: your host explicitly starts an agent action, releases it, or a WebMCP tool executes. You need timestamps, listeners, expiry, and the exposure-time segment to interpret what follows.</p><p>The automated test suite covers those transitions, negative BotD results, provider failure, stale-result expiry, and cleanup. These are contract tests, not human-versus-agent accuracy benchmarks.</p><a class="secondary" href="https://github.com/omegdadi/agent-or-human/blob/main/COMPARISON.md">Read the integration and evaluation guide ↗</a></section>
+<section class="pointer-section"><h2>Keep BotD. Add context.</h2><pre>import { load } from '@fingerprintjs/botd';
+import { createSessionMonitor, connectBotD,
+  createSessionHistory } from 'agent-or-human';
+
+const monitor = createSessionMonitor();
+const history = createSessionHistory(monitor);
+const detector = await load({ monitoring: false });
+const botd = connectBotD(monitor, detector);
+await botd.refresh(); // recollects; evidence expires after 60 seconds
+
+monitor.addEventListener('statechange', event =&gt; {
+  console.log(event.previousState, event.state);
+});
+console.log(history.getSummary());
+
+// On unmount: history.stop(); botd.stop(); monitor.stop();</pre></section>
+</main><footer class="wrap"><a href="../">← Live demo</a><p>MIT licensed. No comparative accuracy claim.</p><a href="https://www.npmjs.com/package/agent-or-human">npm ↗</a></footer><script type="module" src="./compare.js"></script></body></html>

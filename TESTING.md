@@ -66,3 +66,7 @@ Input emulation is not validation on physical Android/iOS hardware, Safari relea
 ## v0.6.1: independent review fixes
 
 60 unit tests cover reentrant classifier/observer delivery, callback isolation, unsubscribe/stop, receiver-preserving wrappers, immediate monitor snapshots, and nested host/tool updates without replay. The 42-test demo suite additionally verifies stable unchanged live regions/evidence cards and count-only evidence expiry. The existing 18 desktop and 12 cross-device input checks and packed consumers pass. See [REVIEW.md](./REVIEW.md) for findings and their disposition.
+
+## v0.7.0: BotD integration and comparison
+
+Local validation: 67 unit tests, no-DOM ESM/CommonJS TypeScript consumers, 18 browser contract tests, 12 emulated input-profile tests, 51 site tests across Chromium/Firefox/WebKit, and fresh packed ESM/CommonJS consumers. The comparison uses actual BotD 2.0.0, tests lazy loading, result attachment/removal, failed loading, no external requests, and a 320px layout. Provider tests cover expiry without input, negative results, failure cleanup, coalescing, late-result cancellation, bounds, and immutable snapshots. History tests cover bounded retention and elapsed segment totals. These counts establish API/integration behavior, not detection accuracy.

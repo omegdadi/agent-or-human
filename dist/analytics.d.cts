@@ -1,14 +1,21 @@
 import { type PointerEvidence } from './pointer.cjs';
 export type { PointerEvidence } from './pointer.cjs';
 import { type DetectOptions, type Detection } from './index.cjs';
-export declare const DETECTOR_VERSION = "0.6.1";
+export declare const DETECTOR_VERSION = "0.7.0";
 export type Segment = 'likely_human' | 'likely_automated' | 'declared_agent' | 'unclassified';
 /** Evidence quality, not a calibrated probability of identity. */
 export type SegmentConfidence = 'insufficient' | 'heuristic' | 'strong_signal' | 'declared';
+export interface AutomationEvidence {
+    source: string;
+    automated: boolean;
+    kind?: string;
+    observedAt: number;
+    expiresAt: number;
+}
 export interface SegmentAssessment {
     segment: Segment;
     confidence: SegmentConfidence;
-    basis: 'none' | 'behavior' | 'browser_signal' | 'declaration';
+    basis: 'none' | 'behavior' | 'browser_signal' | 'declaration' | 'provider';
     reasons: string[];
     detectorVersion: string;
     assessedAt: number;
@@ -17,6 +24,7 @@ export interface SegmentAssessment {
     environment: 'browser' | 'unsupported';
     detection: Detection;
     pointer: PointerEvidence;
+    providers: AutomationEvidence[];
     behavior: {
         trustedEvents: number;
         syntheticEvents: number;
@@ -47,12 +55,12 @@ export interface SessionClassifier {
 /** Opt-in, local-only analytics heuristic. No storage, network, IDs, or experiment allocation. */
 export declare function createSessionClassifier(options?: ClassifierOptions): SessionClassifier;
 /** Internal assessment channel for the monitor; public subscriptions remain transition-only. */
-export declare function createClassifier(options: ClassifierOptions, onAssessment?: (assessment: SegmentAssessment) => void): SessionClassifier;
+export declare function createClassifier(options: ClassifierOptions, onAssessment?: (assessment: SegmentAssessment) => void, readProviders?: (now: number) => AutomationEvidence[]): SessionClassifier;
 /** Flattened event properties for your existing analytics client. Sends nothing. */
 export declare function toAnalyticsProperties(assessment: SegmentAssessment): {
     session_driver_segment: Segment;
     session_driver_confidence: SegmentConfidence;
-    session_driver_basis: "declaration" | "none" | "behavior" | "browser_signal";
+    session_driver_basis: "declaration" | "none" | "behavior" | "browser_signal" | "provider";
     session_driver_reasons: string[];
     session_driver_signals: ("declared-agent" | "declared-human" | "webdriver" | "unreadable-property" | "declaration-conflict" | "debugger-attached" | "agent-ui-indicator" | "invalid-selector" | "host-agent-active" | "webmcp-available" | "webmcp-tool-invoked")[];
     session_driver_version: string;
@@ -60,6 +68,8 @@ export declare function toAnalyticsProperties(assessment: SegmentAssessment): {
     session_driver_changed_at: number;
     session_driver_revision: number;
     session_driver_environment: "browser" | "unsupported";
+    session_driver_provider_sources: string[];
+    session_driver_automation_providers: string[];
     session_driver_pointer_mode: "off" | "observe" | "classify";
     session_driver_pointer_reasons: string[];
 };

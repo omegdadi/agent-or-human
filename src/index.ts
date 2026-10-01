@@ -159,7 +159,12 @@ export function observeSession(options: DetectOptions = {}): SessionObserver {
 }
 
 export { createSessionClassifier, toAnalyticsProperties, DETECTOR_VERSION } from './analytics.js';
-export type { Segment, SegmentConfidence, SegmentAssessment, ClassifierOptions, SessionClassifier, PointerEvidence } from './analytics.js';
+export type { Segment, SegmentConfidence, SegmentAssessment, ClassifierOptions, SessionClassifier, PointerEvidence, AutomationEvidence } from './analytics.js';
 
 export { createSessionMonitor } from './monitor.js';
 export type { SessionMonitor, SessionMonitorOptions, SessionChangeEvent, SessionEventType, SessionEventListener, SessionListenerOptions, SessionAbortSignal } from './monitor.js';
+
+export { connectBotD } from './botd.js';
+export type { BotDDetector, BotDResult, BotDConnection } from './botd.js';
+export { createSessionHistory } from './history.js';
+export type { SessionHistory, SessionHistoryEntry, SessionHistorySummary } from './history.js';

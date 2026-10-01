@@ -3,10 +3,11 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 mkdirSync('dist', { recursive: true });
 execFileSync(process.execPath, ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.json'], { stdio: 'inherit' });
-writeFileSync('dist/index.d.cts', readFileSync('dist/index.d.ts', 'utf8').replaceAll('./analytics.js', './analytics.cjs').replaceAll('./monitor.js', './monitor.cjs'));
+writeFileSync('dist/index.d.cts', readFileSync('dist/index.d.ts', 'utf8').replaceAll('./analytics.js', './analytics.cjs').replaceAll('./monitor.js', './monitor.cjs').replaceAll('./botd.js', './botd.cjs').replaceAll('./history.js', './history.cjs'));
 writeFileSync('dist/analytics.d.cts', readFileSync('dist/analytics.d.ts', 'utf8').replaceAll('./index.js', './index.cjs').replaceAll('./pointer.js', './pointer.cjs'));
 writeFileSync('dist/pointer.d.cts', readFileSync('dist/pointer.d.ts', 'utf8'));
 writeFileSync('dist/monitor.d.cts', readFileSync('dist/monitor.d.ts', 'utf8').replaceAll('./analytics.js', './analytics.cjs').replaceAll('./index.js', './index.cjs'));
+for (const name of ['botd', 'history']) writeFileSync(`dist/${name}.d.cts`, readFileSync(`dist/${name}.d.ts`, 'utf8').replaceAll('./monitor.js', './monitor.cjs').replaceAll('./analytics.js', './analytics.cjs'));
 for (const [format, outfile] of [['esm', 'dist/index.js'], ['cjs', 'dist/index.cjs'], ['iife', 'dist/agent-or-human.global.js']]) {
   await build({ entryPoints: ['src/index.ts'], outfile, format, bundle: true, platform: 'browser', target: 'es2020', minify: true, ...(format === 'iife' ? { globalName: 'AgentOrHuman' } : {}) });
 }

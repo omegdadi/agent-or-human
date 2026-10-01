@@ -1,4 +1,4 @@
-import { createClassifier, type ClassifierOptions, type Segment, type SegmentAssessment } from './analytics.js';
+import { createClassifier, type ClassifierOptions, type Segment, type SegmentAssessment, type AutomationEvidence } from './analytics.js';
 import type { DetectOptions } from './index.js';
 export type SessionEventType = 'statechange' | 'assessmentchange';
 /** Structural types keep SSR/native TypeScript consumers independent of DOM libraries. */
@@ -32,19 +32,22 @@ export interface SessionMonitor {
   removeEventListener(type: SessionEventType, listener: SessionEventListener | null, options?: boolean | SessionListenerOptions): void;
   refresh(): SegmentAssessment;
   /** Replace host evidence, including clearing omitted fields. This is a cooperative declaration, not attestation. */
+  /** Add provider evidence for 1 ms–1 hour (default 60 s); null removes it. Never asserts AI identity. */
+  setAutomationEvidence(source: string, result: { automated: boolean; kind?: string; ttlMs?: number } | null): SegmentAssessment;
   setHostState(host: NonNullable<DetectOptions['host']>): SegmentAssessment;
   wrapWebMCPTool<This, Args extends unknown[], Result>(execute: (this: This, ...args: Args) => Result): (this: This, ...args: Args) => Result;
   /** Remove listeners, polling, and input collection; freeze the last assessment. */
   stop(): void;
 }
 function copy(a: SegmentAssessment): SegmentAssessment {
-  return { ...a, reasons: [...a.reasons], pointer: { ...a.pointer, reasons: [...a.pointer.reasons] },
+  return { ...a, providers: a.providers.map(p => ({ ...p })), reasons: [...a.reasons], pointer: { ...a.pointer, reasons: [...a.pointer.reasons] },
     behavior: { ...a.behavior, modalities: [...a.behavior.modalities] },
     detection: { ...a.detection, signals: a.detection.signals.map(s => ({ ...s })) } };
 }
 function evidenceKey(a: SegmentAssessment) {
   return JSON.stringify([a.segment, a.confidence, a.basis, a.environment, a.detection.verdict,
     [...a.reasons].sort(), a.detection.signals.map(s => `${s.code}:${s.strength}`).sort(),
+    a.providers.map(p => [p.source, p.automated, p.kind]).sort(),
     a.pointer.mode, [...a.pointer.reasons].sort()]);
 }
 /** Browser-style listener ergonomics on an owned monitor; does not patch window/document/navigator.
@@ -55,8 +58,12 @@ export function createSessionMonitor(options: SessionMonitorOptions = {}): Sessi
   if (!Number.isFinite(interval) || interval < 0 || interval > 60000 || (interval > 0 && interval < 10)) throw new RangeError('pollIntervalMs must be 0 or between 10 and 60000');
   const scope = options.scope === undefined ? (typeof window === 'undefined' ? null : window) : options.scope;
   const host = { ...options.host };
+  const providers = new Map<string, AutomationEvidence>();
   let receiveAssessment: ((value: SegmentAssessment) => void) | undefined;
-  const classifier = createClassifier({ ...options, scope, host }, value => receiveAssessment?.(value));
+  const classifier = createClassifier({ ...options, scope, host }, value => receiveAssessment?.(value), now => {
+    for (const [source, value] of providers) if (now >= value.expiresAt) providers.delete(source);
+    return [...providers.values()].sort((a, b) => a.source.localeCompare(b.source)).map(p => ({ ...p }));
+  });
   let current = classifier.getSnapshot();
   let stopped = false;
   let dispatching = false;
@@ -121,11 +128,23 @@ export function createSessionMonitor(options: SessionMonitorOptions = {}): Sessi
       for (const r of registrations) if (r.type === type && r.listener === listener && r.capture === capture) remove(r);
     },
     refresh,
+    setAutomationEvidence(source, result) {
+      if (stopped) return copy(current);
+      if (!/^[a-z][a-z0-9_-]{0,31}$/.test(source)) throw new TypeError('Invalid evidence source');
+      if (result === null) { providers.delete(source); return refresh(); }
+      const ttl = result.ttlMs ?? 60000;
+      if (typeof result.automated !== 'boolean' || !Number.isFinite(ttl) || ttl < 1 || ttl > 3600000 || (result.kind !== undefined && (typeof result.kind !== 'string' || result.kind.length > 80))) throw new TypeError('Invalid automation evidence');
+      const at = classifier.refresh().assessedAt;
+      if (stopped) return copy(current);
+      if (!providers.has(source) && providers.size >= 8) throw new RangeError('At most 8 evidence providers');
+      providers.set(source, { source, automated: result.automated, kind: result.kind, observedAt: at, expiresAt: at + ttl });
+      return refresh();
+    },
     setHostState(value) { if (!stopped) { host.agentActive = value.agentActive; host.debuggerAttached = value.debuggerAttached; } return refresh(); },
     wrapWebMCPTool(execute) { return classifier.wrapWebMCPTool(execute); },
     stop() {
       if (stopped) return; stopped = true;
-      classifier.stop(); for (const removeListener of removers) removeListener();
+      classifier.stop(); providers.clear(); for (const removeListener of removers) removeListener();
       for (const r of registrations) remove(r);
       pending.length = 0; stateHandler = null; assessmentHandler = null;
     },
